@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Vocab - Google Sheets Flashcards</title>
+  <title>IELTS Vocab - Google Sheets Flashcards</title>
   <style>
     :root {
       --purple-800: #4c1d95;
@@ -1133,7 +1133,7 @@
     <header class="topbar">
       <div class="brand">
         <div class="brand-mark">📚</div>
-        <div>Vocab.</div>
+        <div>IELTS Vocab.</div>
       </div>
       <nav class="mode-switch" aria-label="Chuyển chế độ">
         <button id="studentModeBtn" class="active" type="button">Học sinh</button>
@@ -1389,7 +1389,7 @@ E: active</pre></div>
     const GOOGLE_SHEETS_CONFIG = {
       // Bạn có thể thay dòng này bằng API key thật.
       // Nếu không muốn sửa code, vào chế độ Giáo viên và dán API key vào ô nhập ở đó.
-      apiKey: "AIzaSyAoxsn90GwRSPeuiB1BHB-3N96EdvrSDQE",
+      apiKey: "YOUR_API_KEY_HERE",
       spreadsheetId: "1uidrswxf1vqAXNaov11PpPjx5AQI29DrlafL9ht5X9g",
       sheetName: "Vocab Chunks",
       range: "A:E"
@@ -2380,8 +2380,8 @@ E: active</pre></div>
             <div class="topic-actions">
               <button type="button" data-topic="${escapeAttr(topic)}" data-action="flash">📇<br>Flashcard</button>
               <button type="button" data-topic="${escapeAttr(topic)}" data-action="quiz">❓<br>Quiz</button>
-              <button type="button" data-topic="${escapeAttr(topic)}" data-action="type">⌨️<br>Gõ</button>
-              <button type="button" data-topic="${escapeAttr(topic)}" data-action="arrange">🧩<br>Sắp xếp</button>
+              <button type="button" data-topic="${escapeAttr(topic)}" data-action="type">⌨️<br>Type</button>
+              <button type="button" data-topic="${escapeAttr(topic)}" data-action="arrange">🧩<br>Arrange</button>
             </div>
           </article>
         `;
