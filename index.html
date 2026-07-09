@@ -1177,6 +1177,7 @@ E: active</pre></div>
     let practiceCorrect = 0;
     let practiceWrong = 0;
     let currentQuizOptions = [];
+    let currentQuizPrompt = null;
     let currentTypePrompt = null;
     let practiceAnswered = false;
 
@@ -1610,6 +1611,7 @@ E: active</pre></div>
       practiceWrong = 0;
       practiceAnswered = false;
       currentQuizOptions = [];
+      currentQuizPrompt = null;
       currentTypePrompt = null;
 
       showPage("practice");
@@ -1633,6 +1635,7 @@ E: active</pre></div>
       container.classList.remove("hidden");
       done.classList.add("hidden");
       practiceAnswered = false;
+      currentQuizPrompt = null;
       currentTypePrompt = null;
 
       const card = practiceQueue[currentPracticeIndex];
@@ -1641,12 +1644,14 @@ E: active</pre></div>
       $("practiceTitle").textContent = `${isQuiz ? "Quiz" : "Gõ chữ"}: ${currentTopic || card.topic}`;
       $("practiceNumber").textContent = currentPracticeIndex + 1;
       $("practiceTotal").textContent = practiceQueue.length;
-      $("practiceMeaning").textContent = isQuiz
-        ? card.meaning
-        : "Gõ chữ cái còn thiếu trong cụm tiếng Anh.";
-      $("practiceLabel").textContent = isQuiz
-        ? "Chọn English chunk đúng"
-        : card.meaning;
+      if (isQuiz) {
+        currentQuizPrompt = buildQuizPrompt(card);
+        $("practiceMeaning").textContent = currentQuizPrompt.question;
+        $("practiceLabel").textContent = "Chọn English chunk đúng để điền vào chỗ trống";
+      } else {
+        $("practiceMeaning").textContent = "Gõ chữ cái còn thiếu trong cụm tiếng Anh.";
+        $("practiceLabel").textContent = card.meaning;
+      }
       $("practiceFeedback").className = "practice-feedback hidden";
       $("practiceFeedback").textContent = "";
       $("practiceContinueBtn").classList.add("hidden");
@@ -1667,6 +1672,50 @@ E: active</pre></div>
         $("typeSubmitBtn").disabled = false;
         setTimeout(() => $("typeAnswer").focus(), 80);
       }
+    }
+
+    function buildQuizPrompt(card) {
+      const example = cleanCell(card.example);
+      const chunk = cleanCell(card.chunk);
+      const blank = "___________";
+
+      if (!example) {
+        return {
+          question: `${blank}`,
+          usedExample: false
+        };
+      }
+
+      if (!chunk) {
+        return {
+          question: example,
+          usedExample: true
+        };
+      }
+
+      // Dùng câu full trong cột D (example), rồi khoét lỗ đúng English chunk.
+      // Ví dụ: "I get to dive into topics on the Internet." -> "I ___________ topics on the Internet."
+      const escapedChunk = escapeRegExp(chunk);
+      const exactRegex = new RegExp(escapedChunk, "i");
+
+      if (exactRegex.test(example)) {
+        return {
+          question: example.replace(exactRegex, blank),
+          usedExample: true
+        };
+      }
+
+      // Nếu giáo viên nhập example nhưng example không chứa chính xác chunk,
+      // app vẫn cho làm quiz nhưng giữ câu example gốc và thêm chỗ trống ở dưới.
+      return {
+        question: `${example}
+${blank}`,
+        usedExample: true
+      };
+    }
+
+    function escapeRegExp(value) {
+      return String(value).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
     }
 
     function buildQuizOptions(card) {
