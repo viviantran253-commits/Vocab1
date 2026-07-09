@@ -847,6 +847,98 @@
       margin-top: 12px;
     }
 
+    .arrange-prompt {
+      background: var(--purple-50);
+      border: 1px dashed var(--purple-400);
+      border-radius: 22px;
+      padding: 14px 16px;
+      color: var(--purple-800);
+      font-weight: 800;
+      text-align: center;
+    }
+
+    .arrange-section {
+      display: grid;
+      gap: 8px;
+    }
+
+    .arrange-subtitle {
+      color: var(--muted);
+      font-size: 0.86rem;
+      font-weight: 800;
+    }
+
+    .arrange-bank,
+    .arrange-answer {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      min-height: 68px;
+      border-radius: 22px;
+      padding: 14px;
+      align-items: flex-start;
+    }
+
+    .arrange-bank {
+      background: var(--purple-50);
+      border: 1px solid var(--line);
+    }
+
+    .arrange-answer {
+      background: #fff;
+      border: 2px dashed var(--purple-200, #ddd6fe);
+    }
+
+    .arrange-placeholder {
+      color: var(--muted);
+      font-weight: 700;
+      align-self: center;
+    }
+
+    .arrange-tile {
+      border: 1px solid var(--line);
+      background: #fff;
+      color: var(--text);
+      border-radius: 16px;
+      padding: 11px 14px;
+      font-weight: 850;
+      min-height: 48px;
+      transition: 0.14s ease;
+    }
+
+    .arrange-bank .arrange-tile:hover:not(:disabled),
+    .arrange-answer .arrange-tile:hover:not(:disabled) {
+      transform: translateY(-1px);
+      border-color: var(--purple-400);
+      box-shadow: var(--shadow-soft);
+    }
+
+    .arrange-answer .arrange-tile {
+      background: var(--purple-50);
+    }
+
+    .arrange-actions {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .arrange-actions button {
+      border: 1px solid var(--line);
+      background: #fff;
+      color: var(--text);
+      border-radius: 16px;
+      padding: 12px 16px;
+      font-weight: 850;
+      min-height: 52px;
+    }
+
+    .arrange-actions button.primary {
+      background: var(--purple-600);
+      color: #fff;
+      border-color: transparent;
+    }
+
     .empty-state {
       text-align: center;
       padding: 40px 20px;
@@ -1158,6 +1250,23 @@ E: active</pre></div>
             </div>
           </div>
 
+          <div id="arrangeArea" class="hidden">
+            <div id="arrangePrompt" class="arrange-prompt">...</div>
+            <div class="arrange-section">
+              <div class="arrange-subtitle">Chọn các ô bên dưới để sắp xếp</div>
+              <div id="arrangeBank" class="arrange-bank"></div>
+            </div>
+            <div class="arrange-section">
+              <div class="arrange-subtitle">Câu trả lời của bạn</div>
+              <div id="arrangeAnswer" class="arrange-answer"></div>
+            </div>
+            <div class="arrange-actions">
+              <button id="arrangeUndoBtn" type="button">Lùi 1 bước</button>
+              <button id="arrangeClearBtn" type="button">Xóa hết</button>
+              <button id="arrangeSubmitBtn" class="primary" type="button">Kiểm tra</button>
+            </div>
+          </div>
+
           <div id="practiceFeedback" class="practice-feedback hidden"></div>
           <button id="practiceContinueBtn" class="continue-btn hidden" type="button">Câu tiếp theo →</button>
         </div>
@@ -1196,7 +1305,7 @@ E: active</pre></div>
     };
 
     const API_KEY_STORAGE_KEY = "ielts_vocab_google_sheets_api_key";
-    const APP_VERSION = "Quiz dùng Example cột D · v3";
+    const APP_VERSION = "Quiz + Gõ + Sắp xếp · v4";
 
     // ============================================================
     // 2. DỮ LIỆU BAN ĐẦU
@@ -1235,6 +1344,7 @@ E: active</pre></div>
     let currentQuizOptions = [];
     let currentQuizPrompt = null;
     let currentTypePrompt = null;
+    let currentArrangePrompt = null;
     let practiceAnswered = false;
 
     function loadAppData() {
@@ -1717,6 +1827,7 @@ E: active</pre></div>
       currentQuizOptions = [];
       currentQuizPrompt = null;
       currentTypePrompt = null;
+      currentArrangePrompt = null;
 
       showPage("practice");
       renderPracticeItem();
@@ -1741,33 +1852,39 @@ E: active</pre></div>
       practiceAnswered = false;
       currentQuizPrompt = null;
       currentTypePrompt = null;
+      currentArrangePrompt = null;
 
       const card = practiceQueue[currentPracticeIndex];
       const isQuiz = practiceType === "quiz";
+      const isType = practiceType === "type";
+      const isArrange = practiceType === "arrange";
 
-      $("practiceTitle").textContent = `${isQuiz ? "Quiz" : "Gõ chữ"}: ${currentTopic || card.topic}`;
+      const modeLabel = isQuiz ? "Quiz" : (isType ? "Gõ" : "Sắp xếp");
+      $("practiceTitle").textContent = `${modeLabel}: ${currentTopic || card.topic}`;
       $("practiceNumber").textContent = currentPracticeIndex + 1;
       $("practiceTotal").textContent = practiceQueue.length;
-      if (isQuiz) {
-        currentQuizPrompt = buildQuizPrompt(card);
-        $("practiceMeaning").textContent = currentQuizPrompt.question;
-        $("practiceLabel").textContent = currentQuizPrompt.warning || "Chọn English chunk đúng để điền vào chỗ trống";
-      } else {
-        $("practiceMeaning").textContent = "Gõ chữ cái còn thiếu trong cụm tiếng Anh.";
-        $("practiceLabel").textContent = card.meaning;
-      }
       $("practiceFeedback").className = "practice-feedback hidden";
       $("practiceFeedback").textContent = "";
       $("practiceContinueBtn").classList.add("hidden");
       progress.style.width = `${(currentPracticeIndex / practiceQueue.length) * 100}%`;
 
+      $("quizArea").classList.add("hidden");
+      $("typeArea").classList.add("hidden");
+      $("arrangeArea").classList.add("hidden");
+
       if (isQuiz) {
+        currentQuizPrompt = buildQuizPrompt(card);
+        $("practiceMeaning").textContent = currentQuizPrompt.question;
+        $("practiceLabel").textContent = currentQuizPrompt.warning || "Chọn English chunk đúng để điền vào chỗ trống";
         $("quizArea").classList.remove("hidden");
-        $("typeArea").classList.add("hidden");
         currentQuizOptions = buildQuizOptions(card);
         renderQuizOptions(card);
-      } else {
-        $("quizArea").classList.add("hidden");
+        return;
+      }
+
+      if (isType) {
+        $("practiceMeaning").textContent = "Gõ chữ cái còn thiếu trong cụm tiếng Anh.";
+        $("practiceLabel").textContent = card.meaning;
         $("typeArea").classList.remove("hidden");
         currentTypePrompt = buildTypePrompt(card.chunk);
         $("typePrompt").textContent = currentTypePrompt.masked;
@@ -1775,6 +1892,20 @@ E: active</pre></div>
         $("typeAnswer").disabled = false;
         $("typeSubmitBtn").disabled = false;
         setTimeout(() => $("typeAnswer").focus(), 80);
+        return;
+      }
+
+      if (isArrange) {
+        currentArrangePrompt = buildArrangePrompt(card.chunk);
+        $("practiceMeaning").textContent = card.meaning;
+        $("practiceLabel").textContent = currentArrangePrompt.kind === "words"
+          ? "Sắp xếp các từ thành English chunk đúng"
+          : "Sắp xếp các chữ cái thành từ đúng";
+        $("arrangePrompt").textContent = currentArrangePrompt.kind === "words"
+          ? "Bấm từng từ để xếp lại đúng thứ tự."
+          : "Bấm từng chữ cái để ghép thành từ đúng.";
+        $("arrangeArea").classList.remove("hidden");
+        renderArrangeState();
       }
     }
 
@@ -1901,6 +2032,120 @@ E: active</pre></div>
 
       showPracticeFeedback(isCorrect,
         isCorrect ? "Đúng rồi!" : `Chưa đúng. Đáp án đúng là: ${card.chunk}`
+      );
+      recordPracticeReview(card, isCorrect);
+      $("practiceContinueBtn").classList.remove("hidden");
+    }
+
+    function buildArrangePrompt(chunk) {
+      const full = cleanCell(chunk);
+      const kind = /\s/.test(full) ? "words" : "letters";
+      const parts = kind === "words" ? full.split(/\s+/).filter(Boolean) : full.split("");
+      const sourceTiles = parts.map((text, index) => ({
+        id: `tile-${index}-${text}`,
+        text,
+        order: index
+      }));
+
+      let bankTiles = sourceTiles.map(tile => ({ ...tile }));
+      let safety = 0;
+      do {
+        bankTiles = shuffleArray(bankTiles.map(tile => ({ ...tile })));
+        safety++;
+      } while (safety < 8 && bankTiles.every((tile, index) => tile.order === index) && bankTiles.length > 1);
+
+      return {
+        kind,
+        full,
+        sourceTiles,
+        bankTiles,
+        answerTiles: []
+      };
+    }
+
+    function renderArrangeState() {
+      const bank = $("arrangeBank");
+      const answer = $("arrangeAnswer");
+      if (!currentArrangePrompt) return;
+
+      bank.innerHTML = currentArrangePrompt.bankTiles.map(tile => `
+        <button class="arrange-tile" type="button" data-source="bank" data-tile-id="${escapeAttr(tile.id)}">${escapeHTML(tile.text)}</button>
+      `).join("");
+
+      answer.innerHTML = currentArrangePrompt.answerTiles.length
+        ? currentArrangePrompt.answerTiles.map(tile => `
+            <button class="arrange-tile" type="button" data-source="answer" data-tile-id="${escapeAttr(tile.id)}">${escapeHTML(tile.text)}</button>
+          `).join("")
+        : `<div class="arrange-placeholder">Hãy bấm các ô ở trên để tạo đáp án.</div>`;
+
+      bank.querySelectorAll(".arrange-tile").forEach(button => {
+        button.disabled = practiceAnswered;
+        button.addEventListener("click", () => moveArrangeTileToAnswer(button.dataset.tileId));
+      });
+
+      answer.querySelectorAll(".arrange-tile").forEach(button => {
+        button.disabled = practiceAnswered;
+        button.addEventListener("click", () => moveArrangeTileBack(button.dataset.tileId));
+      });
+
+      $("arrangeUndoBtn").disabled = practiceAnswered || !currentArrangePrompt.answerTiles.length;
+      $("arrangeClearBtn").disabled = practiceAnswered || !currentArrangePrompt.answerTiles.length;
+      $("arrangeSubmitBtn").disabled = practiceAnswered;
+    }
+
+    function moveArrangeTileToAnswer(tileId) {
+      if (practiceAnswered || !currentArrangePrompt) return;
+      const index = currentArrangePrompt.bankTiles.findIndex(tile => tile.id === tileId);
+      if (index === -1) return;
+      const [tile] = currentArrangePrompt.bankTiles.splice(index, 1);
+      currentArrangePrompt.answerTiles.push(tile);
+      renderArrangeState();
+    }
+
+    function moveArrangeTileBack(tileId) {
+      if (practiceAnswered || !currentArrangePrompt) return;
+      const index = currentArrangePrompt.answerTiles.findIndex(tile => tile.id === tileId);
+      if (index === -1) return;
+      const [tile] = currentArrangePrompt.answerTiles.splice(index, 1);
+      currentArrangePrompt.bankTiles.push(tile);
+      renderArrangeState();
+    }
+
+    function clearArrangeAnswer() {
+      if (practiceAnswered || !currentArrangePrompt || !currentArrangePrompt.answerTiles.length) return;
+      currentArrangePrompt.bankTiles = [...currentArrangePrompt.bankTiles, ...currentArrangePrompt.answerTiles];
+      currentArrangePrompt.answerTiles = [];
+      renderArrangeState();
+    }
+
+    function undoArrangeAnswer() {
+      if (practiceAnswered || !currentArrangePrompt || !currentArrangePrompt.answerTiles.length) return;
+      const tile = currentArrangePrompt.answerTiles.pop();
+      currentArrangePrompt.bankTiles.push(tile);
+      renderArrangeState();
+    }
+
+    function submitArrangeAnswer() {
+      if (practiceAnswered || practiceType !== "arrange" || !currentArrangePrompt) return;
+      if (currentArrangePrompt.answerTiles.length !== currentArrangePrompt.sourceTiles.length) {
+        showToast(currentArrangePrompt.kind === "words"
+          ? "Hãy sắp xếp đủ tất cả các từ trước khi kiểm tra"
+          : "Hãy sắp xếp đủ tất cả các chữ cái trước khi kiểm tra");
+        return;
+      }
+
+      practiceAnswered = true;
+      const card = practiceQueue[currentPracticeIndex];
+      const userAnswer = currentArrangePrompt.kind === "words"
+        ? currentArrangePrompt.answerTiles.map(tile => tile.text).join(" ")
+        : currentArrangePrompt.answerTiles.map(tile => tile.text).join("");
+      const isCorrect = normalizeChunkForCompare(userAnswer) === normalizeChunkForCompare(currentArrangePrompt.full);
+
+      renderArrangeState();
+      showPracticeFeedback(isCorrect,
+        isCorrect
+          ? `Đúng rồi! Đáp án: ${currentArrangePrompt.full}`
+          : `Chưa đúng. Đáp án đúng là: ${currentArrangePrompt.full}`
       );
       recordPracticeReview(card, isCorrect);
       $("practiceContinueBtn").classList.remove("hidden");
@@ -2043,6 +2288,7 @@ E: active</pre></div>
               <button type="button" data-topic="${escapeAttr(topic)}" data-action="flash">📇<br>Flashcard</button>
               <button type="button" data-topic="${escapeAttr(topic)}" data-action="quiz">❓<br>Quiz</button>
               <button type="button" data-topic="${escapeAttr(topic)}" data-action="type">⌨️<br>Gõ</button>
+              <button type="button" data-topic="${escapeAttr(topic)}" data-action="arrange">🧩<br>Sắp xếp</button>
             </div>
           </article>
         `;
@@ -2055,6 +2301,7 @@ E: active</pre></div>
           if (action === "flash") startStudy(topic, true);
           if (action === "quiz") startPractice(topic, "quiz", false);
           if (action === "type") startPractice(topic, "type", false);
+          if (action === "arrange") startPractice(topic, "arrange", false);
         });
       });
     }
@@ -2175,6 +2422,9 @@ E: active</pre></div>
       $("typeAnswer").addEventListener("keydown", event => {
         if (event.key === "Enter") submitTypeAnswer();
       });
+      $("arrangeSubmitBtn").addEventListener("click", submitArrangeAnswer);
+      $("arrangeClearBtn").addEventListener("click", clearArrangeAnswer);
+      $("arrangeUndoBtn").addEventListener("click", undoArrangeAnswer);
       $("restartPracticeBtn").addEventListener("click", () => {
         practiceQueue = [...originalPracticeQueue];
         currentPracticeIndex = 0;
