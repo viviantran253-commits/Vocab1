@@ -1144,9 +1144,8 @@
     <section id="studentPage" class="page active">
       <div class="hero">
         <div>
-          <div class="label">Đến hạn hôm nay</div>
-          <h1><span id="dueCountHero">0</span> cụm</h1>
-          <p>🔥 Streak <span id="streakHero">0</span> ngày</p>
+          <h1>🔥 Streak <span id="streakHero">0</span> ngày</h1>
+          <p>Học mỗi ngày để giữ chuỗi học tập.</p>
         </div>
         <button id="studyDueBtn" type="button">Học ngay →</button>
       </div>
@@ -1724,7 +1723,7 @@ E: active</pre></div>
       studyQueue = onlyDue ? dueChunks : topicChunks;
 
       if (!studyQueue.length && onlyDue) {
-        showToast("Hôm nay không còn cụm đến hạn trong chủ đề này");
+        showToast("App sẽ cho học toàn bộ chủ đề này.");
         studyQueue = topicChunks;
       }
 
@@ -1742,20 +1741,14 @@ E: active</pre></div>
     }
 
     function startDueStudy() {
-      const due = getDueChunks();
-      if (!due.length) {
-        showToast("Hôm nay chưa có cụm đến hạn. App sẽ cho học toàn bộ chunks.");
-        studyQueue = [...appData.chunks.filter(chunk => chunk.active !== false)];
-      } else {
-        studyQueue = due;
-      }
+      studyQueue = [...appData.chunks.filter(chunk => chunk.active !== false)];
 
       if (!studyQueue.length) {
         showToast("Chưa có chunks để học. Hãy đồng bộ Google Sheets trước.");
         return;
       }
 
-      currentTopic = "Các cụm đến hạn";
+      currentTopic = "Học hôm nay";
       originalStudyQueue = [...studyQueue];
       currentCardIndex = 0;
       isFlipped = false;
@@ -1894,7 +1887,7 @@ E: active</pre></div>
       practiceQueue = onlyDue ? dueChunks : topicChunks;
 
       if (!practiceQueue.length && onlyDue) {
-        showToast("Hôm nay không còn cụm đến hạn trong chủ đề này. App sẽ cho luyện toàn bộ chủ đề.");
+        showToast("App sẽ cho luyện toàn bộ chủ đề này.");
         practiceQueue = topicChunks;
       }
 
@@ -2331,12 +2324,10 @@ E: active</pre></div>
     }
 
     function renderDashboard() {
-      const dueChunks = getDueChunks();
       const mastered = appData.chunks.filter(chunk => chunk.status === "mastered" || Number(chunk.masteryLevel || 0) >= 4).length;
       const newChunks = appData.chunks.filter(chunk => Number(chunk.reviewCount || 0) === 0).length;
       const accuracy = calculateAccuracy(appData.reviewHistory);
 
-      $("dueCountHero").textContent = dueChunks.length;
       $("streakHero").textContent = appData.streak || 0;
       $("streakStat").textContent = appData.streak || 0;
       $("masteredStat").textContent = mastered;
@@ -2361,7 +2352,6 @@ E: active</pre></div>
 
       list.innerHTML = topics.map(topic => {
         const chunks = appData.chunks.filter(chunk => chunk.topic === topic);
-        const due = chunks.filter(chunk => new Date(chunk.nextReview) <= new Date()).length;
         const mastered = chunks.filter(chunk => chunk.status === "mastered" || Number(chunk.masteryLevel || 0) >= 4).length;
         const total = chunks.length;
         const percent = total ? Math.round((mastered / total) * 100) : 0;
@@ -2375,7 +2365,6 @@ E: active</pre></div>
               <span class="badge">active</span>
             </div>
             <div class="progress-line"><i style="width:${percent}%"></i></div>
-            <div class="small-muted">📅 ${due} đến hạn</div>
             <div class="topic-actions">
               <button type="button" data-topic="${escapeAttr(topic)}" data-action="flash">📇<br>Flashcard</button>
               <button type="button" data-topic="${escapeAttr(topic)}" data-action="quiz">❓<br>Quiz</button>
@@ -2390,7 +2379,7 @@ E: active</pre></div>
         button.addEventListener("click", () => {
           const topic = button.dataset.topic;
           const action = button.dataset.action;
-          if (action === "flash") startStudy(topic, true);
+          if (action === "flash") startStudy(topic, false);
           if (action === "quiz") startPractice(topic, "quiz", false);
           if (action === "type") startPractice(topic, "type", false);
           if (action === "arrange") startPractice(topic, "arrange", false);
