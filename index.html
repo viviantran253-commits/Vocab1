@@ -1245,7 +1245,7 @@ E: active</pre></div>
           <div id="typeArea" class="hidden">
             <div id="typePrompt" class="type-prompt">...</div>
             <div class="type-input-row">
-              <input id="typeAnswer" type="text" maxlength="1" autocomplete="off" autocapitalize="off" spellcheck="false" aria-label="Gõ chữ cái còn thiếu" />
+              <input id="typeAnswer" type="text" maxlength="1" autocomplete="off" autocapitalize="off" spellcheck="false" aria-label="Type chữ cái còn thiếu" />
               <button id="typeSubmitBtn" type="button">Kiểm tra</button>
             </div>
           </div>
@@ -1253,7 +1253,7 @@ E: active</pre></div>
           <div id="arrangeArea" class="hidden">
             <div id="arrangePrompt" class="arrange-prompt">...</div>
             <div class="arrange-section">
-              <div class="arrange-subtitle">Chọn các ô bên dưới để sắp xếp</div>
+              <div class="arrange-subtitle">Chọn các ô bên dưới để Arrange</div>
               <div id="arrangeBank" class="arrange-bank"></div>
             </div>
             <div class="arrange-section">
@@ -1305,7 +1305,7 @@ E: active</pre></div>
     };
 
     const API_KEY_STORAGE_KEY = "ielts_vocab_google_sheets_api_key";
-    const APP_VERSION = "Quiz + Gõ + Sắp xếp · v4";
+    const APP_VERSION = "Quiz + Type + Arrange · v4";
 
     // ============================================================
     // 2. DỮ LIỆU BAN ĐẦU
@@ -1859,7 +1859,7 @@ E: active</pre></div>
       const isType = practiceType === "type";
       const isArrange = practiceType === "arrange";
 
-      const modeLabel = isQuiz ? "Quiz" : (isType ? "Gõ" : "Sắp xếp");
+      const modeLabel = isQuiz ? "Quiz" : (isType ? "Type" : "Arrange");
       $("practiceTitle").textContent = `${modeLabel}: ${currentTopic || card.topic}`;
       $("practiceNumber").textContent = currentPracticeIndex + 1;
       $("practiceTotal").textContent = practiceQueue.length;
@@ -1883,7 +1883,7 @@ E: active</pre></div>
       }
 
       if (isType) {
-        $("practiceMeaning").textContent = "Gõ chữ cái còn thiếu trong cụm tiếng Anh.";
+        $("practiceMeaning").textContent = "Type chữ cái còn thiếu trong cụm tiếng Anh.";
         $("practiceLabel").textContent = card.meaning;
         $("typeArea").classList.remove("hidden");
         currentTypePrompt = buildTypePrompt(card.chunk);
@@ -1899,8 +1899,8 @@ E: active</pre></div>
         currentArrangePrompt = buildArrangePrompt(card.chunk);
         $("practiceMeaning").textContent = card.meaning;
         $("practiceLabel").textContent = currentArrangePrompt.kind === "words"
-          ? "Sắp xếp các từ thành English chunk đúng"
-          : "Sắp xếp các chữ cái thành từ đúng";
+          ? "Arrange các từ thành English chunk đúng"
+          : "Arrange các chữ cái thành từ đúng";
         $("arrangePrompt").textContent = currentArrangePrompt.kind === "words"
           ? "Bấm từng từ để xếp lại đúng thứ tự."
           : "Bấm từng chữ cái để ghép thành từ đúng.";
@@ -2129,8 +2129,8 @@ E: active</pre></div>
       if (practiceAnswered || practiceType !== "arrange" || !currentArrangePrompt) return;
       if (currentArrangePrompt.answerTiles.length !== currentArrangePrompt.sourceTiles.length) {
         showToast(currentArrangePrompt.kind === "words"
-          ? "Hãy sắp xếp đủ tất cả các từ trước khi kiểm tra"
-          : "Hãy sắp xếp đủ tất cả các chữ cái trước khi kiểm tra");
+          ? "Hãy Arrange đủ tất cả các từ trước khi kiểm tra"
+          : "Hãy Arrange đủ tất cả các chữ cái trước khi kiểm tra");
         return;
       }
 
@@ -2174,7 +2174,7 @@ E: active</pre></div>
 
       const answer = cleanCell($("typeAnswer").value);
       if (!answer) {
-        showToast("Hãy gõ 1 chữ cái còn thiếu");
+        showToast("Hãy Type 1 chữ cái còn thiếu");
         return;
       }
 
@@ -2287,8 +2287,8 @@ E: active</pre></div>
             <div class="topic-actions">
               <button type="button" data-topic="${escapeAttr(topic)}" data-action="flash">📇<br>Flashcard</button>
               <button type="button" data-topic="${escapeAttr(topic)}" data-action="quiz">❓<br>Quiz</button>
-              <button type="button" data-topic="${escapeAttr(topic)}" data-action="type">⌨️<br>Gõ</button>
-              <button type="button" data-topic="${escapeAttr(topic)}" data-action="arrange">🧩<br>Sắp xếp</button>
+              <button type="button" data-topic="${escapeAttr(topic)}" data-action="type">⌨️<br>Type</button>
+              <button type="button" data-topic="${escapeAttr(topic)}" data-action="arrange">🧩<br>Arrange</button>
             </div>
           </article>
         `;
