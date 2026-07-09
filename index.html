@@ -915,108 +915,18 @@ E: active</pre></div>
     // Các dòng còn lại đã được viết theo đúng yêu cầu của bạn.
     // ============================================================
     const GOOGLE_SHEETS_CONFIG = {
-      apiKey: "AIzaSyAoxsn90GwRSPeuiB1BHB-3N96EdvrSDQE",
+      apiKey: "YOUR_API_KEY_HERE",
       spreadsheetId: "1uidrswxf1vqAXNaov11PpPjx5AQI29DrlafL9ht5X9g",
       sheetName: "Vocab Chunks",
       range: "A:E"
     };
 
     // ============================================================
-    // 2. DỮ LIỆU MẪU - dùng khi chưa đồng bộ Google Sheets
+    // 2. DỮ LIỆU BAN ĐẦU
+    // Bản này KHÔNG có chunks mẫu trong code.
+    // Tất cả chunks sẽ được lấy từ Google Sheet của bạn.
     // ============================================================
-    const SAMPLE_CHUNKS = [
-      {
-        topic: "Daily Life and Technology",
-        chunk: "I find myself leaning towards",
-        meaning: "Tôi có xu hướng nghiêng về",
-        example: "When I choose a device, I find myself leaning towards something simple.",
-        active: true
-      },
-      {
-        topic: "Daily Life and Technology",
-        chunk: "it’s hard to imagine not using it",
-        meaning: "Thật khó để tưởng tượng việc không sử dụng nó",
-        example: "My phone is so useful that it’s hard to imagine not using it.",
-        active: true
-      },
-      {
-        topic: "Daily Life and Technology",
-        chunk: "scroll through the Internet",
-        meaning: "Lướt Internet",
-        example: "Many students scroll through the Internet after school.",
-        active: true
-      },
-      {
-        topic: "Daily Life and Technology",
-        chunk: "keep in touch with my friends",
-        meaning: "Giữ liên lạc với bạn bè của tôi",
-        example: "Social media helps me keep in touch with my friends.",
-        active: true
-      },
-      {
-        topic: "Daily Life and Technology",
-        chunk: "stay updated on the latest news",
-        meaning: "Cập nhật những tin tức mới nhất",
-        example: "I use my phone to stay updated on the latest news.",
-        active: true
-      },
-      {
-        topic: "Daily Life and Technology",
-        chunk: "catch up on things",
-        meaning: "Bắt kịp mọi thứ / cập nhật tình hình",
-        example: "At the weekend, I catch up on things I missed during the week.",
-        active: true
-      },
-      {
-        topic: "Daily Life and Technology",
-        chunk: "get things done",
-        meaning: "Hoàn thành công việc / làm xong việc",
-        example: "A clear plan helps me get things done faster.",
-        active: true
-      },
-      {
-        topic: "Daily Life and Technology",
-        chunk: "pick up skills",
-        meaning: "Học hỏi kỹ năng",
-        example: "You can pick up skills by watching useful videos online.",
-        active: true
-      },
-      {
-        topic: "Daily Life and Technology",
-        chunk: "get to dive into",
-        meaning: "Có cơ hội khám phá sâu vào",
-        example: "Online courses allow me to get to dive into topics I like.",
-        active: true
-      },
-      {
-        topic: "Daily Life and Technology",
-        chunk: "every now and then",
-        meaning: "Thỉnh thoảng",
-        example: "I watch English videos every now and then.",
-        active: true
-      },
-      {
-        topic: "Daily Life and Technology",
-        chunk: "a perfect stress reliever for me",
-        meaning: "Một cách giảm căng thẳng hoàn hảo đối với tôi",
-        example: "Listening to music is a perfect stress reliever for me.",
-        active: true
-      },
-      {
-        topic: "Daily Life and Technology",
-        chunk: "makes a huge difference",
-        meaning: "Tạo ra sự khác biệt lớn",
-        example: "Practising every day makes a huge difference.",
-        active: true
-      },
-      {
-        topic: "Daily Life and Technology",
-        chunk: "a game changer",
-        meaning: "Một thứ rất hữu ích / một yếu tố thay đổi tình hình rõ rệt",
-        example: "For language learning, flashcards can be a game changer.",
-        active: true
-      }
-    ];
+    const SAMPLE_CHUNKS = [];
 
     // ============================================================
     // 3. LOCALSTORAGE
@@ -1024,7 +934,7 @@ E: active</pre></div>
     const STORAGE_KEY = "ielts_vocab_google_sheets_app_v1";
 
     const defaultAppData = {
-      chunks: SAMPLE_CHUNKS.map(createChunkRecord),
+      chunks: [],
       reviewHistory: [],
       streak: 0,
       lastStudyDate: null,
@@ -1079,13 +989,14 @@ E: active</pre></div>
         const importedChunks = await fetchChunksFromGoogleSheets();
         addSyncLog(`Đã đọc ${importedChunks.length} chunks từ Google Sheets.`);
 
-        const result = upsertImportedChunks(importedChunks);
+        const result = syncImportedChunksAsSourceOfTruth(importedChunks);
         appData.lastSync = new Date().toISOString();
         saveAppData();
 
         addSyncLog(`Đã thêm mới: ${result.added}`);
         addSyncLog(`Đã cập nhật: ${result.updated}`);
-        addSyncLog(`Đã bỏ qua trùng lặp: ${result.skipped}`);
+        addSyncLog(`Đã bỏ qua không đổi: ${result.skipped}`);
+        addSyncLog(`Đã xóa khỏi app vì không còn trong Sheet: ${result.removed}`);
         addSyncLog("Đồng bộ hoàn tất.");
 
         renderImportedPreview(importedChunks);
@@ -1177,44 +1088,53 @@ E: active</pre></div>
       return imported;
     }
 
-    function upsertImportedChunks(importedChunks) {
+    function syncImportedChunksAsSourceOfTruth(importedChunks) {
+      // Google Sheet là nguồn dữ liệu chính.
+      // Sau khi đồng bộ, app CHỈ giữ những chunks đang có trong Google Sheet.
+      // Những chunks cũ có trong localStorage/code nhưng không còn trong Sheet sẽ bị xóa khỏi app.
       let added = 0;
       let updated = 0;
       let skipped = 0;
+      let removed = 0;
+
+      const existingChunks = Array.isArray(appData.chunks) ? appData.chunks : [];
+      const existingById = new Map(existingChunks.map(chunk => [chunk.id, chunk]));
+      const importedIds = new Set(importedChunks.map(chunk => chunk.id));
+      const nextChunks = [];
 
       importedChunks.forEach(newChunk => {
-        const existingIndex = appData.chunks.findIndex(oldChunk => oldChunk.id === newChunk.id);
+        const oldChunk = existingById.get(newChunk.id);
 
-        if (existingIndex === -1) {
-          appData.chunks.push(newChunk);
+        if (!oldChunk) {
+          nextChunks.push(newChunk);
           added++;
           return;
         }
 
-        const oldChunk = appData.chunks[existingIndex];
         const hasChanged =
           oldChunk.topic !== newChunk.topic ||
           oldChunk.chunk !== newChunk.chunk ||
           oldChunk.meaning !== newChunk.meaning ||
           oldChunk.example !== newChunk.example;
 
-        if (hasChanged) {
-          appData.chunks[existingIndex] = {
-            ...oldChunk,
-            topic: newChunk.topic,
-            chunk: newChunk.chunk,
-            meaning: newChunk.meaning,
-            example: newChunk.example,
-            active: true,
-            updatedAt: new Date().toISOString()
-          };
-          updated++;
-        } else {
-          skipped++;
-        }
+        nextChunks.push({
+          ...oldChunk,
+          topic: newChunk.topic,
+          chunk: newChunk.chunk,
+          meaning: newChunk.meaning,
+          example: newChunk.example,
+          active: true,
+          updatedAt: hasChanged ? new Date().toISOString() : oldChunk.updatedAt
+        });
+
+        if (hasChanged) updated++;
+        else skipped++;
       });
 
-      return { added, updated, skipped };
+      removed = existingChunks.filter(oldChunk => !importedIds.has(oldChunk.id)).length;
+      appData.chunks = nextChunks;
+
+      return { added, updated, skipped, removed };
     }
 
     // ============================================================
