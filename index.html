@@ -641,6 +641,172 @@
       margin-top: 12px;
     }
 
+
+
+    .practice-shell {
+      padding: clamp(14px, 3vw, 22px);
+    }
+
+    .practice-card {
+      background: #fff;
+      border: 1px solid var(--line);
+      border-radius: 30px;
+      padding: clamp(20px, 5vw, 34px);
+      box-shadow: var(--shadow);
+      margin-top: 14px;
+      min-height: 280px;
+      display: grid;
+      gap: 16px;
+      align-content: center;
+    }
+
+    .practice-label {
+      color: var(--purple-700);
+      font-weight: 900;
+      font-size: 0.88rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+
+    .practice-meaning {
+      font-size: clamp(1.35rem, 5vw, 2.25rem);
+      line-height: 1.25;
+      font-weight: 900;
+      letter-spacing: -0.035em;
+    }
+
+    .quiz-options {
+      display: grid;
+      gap: 10px;
+      margin-top: 4px;
+    }
+
+    .quiz-option {
+      width: 100%;
+      min-height: 62px;
+      border: 1px solid var(--line);
+      background: var(--purple-50);
+      color: var(--text);
+      border-radius: 18px;
+      padding: 13px 14px;
+      text-align: left;
+      display: grid;
+      grid-template-columns: 34px 1fr;
+      gap: 10px;
+      align-items: center;
+      font-weight: 850;
+      transition: 0.14s ease;
+    }
+
+    .quiz-option:hover:not(:disabled) {
+      transform: translateY(-1px);
+      border-color: var(--purple-400);
+      background: #fff;
+    }
+
+    .quiz-option .letter {
+      width: 32px;
+      height: 32px;
+      border-radius: 12px;
+      display: grid;
+      place-items: center;
+      background: #fff;
+      color: var(--purple-700);
+      font-weight: 950;
+      border: 1px solid var(--line);
+    }
+
+    .quiz-option.correct {
+      background: var(--green-bg);
+      border-color: rgba(22, 163, 74, 0.35);
+      color: #14532d;
+    }
+
+    .quiz-option.wrong {
+      background: var(--red-bg);
+      border-color: rgba(220, 38, 38, 0.35);
+      color: #7f1d1d;
+    }
+
+    .type-prompt {
+      background: var(--purple-50);
+      border: 1px dashed var(--purple-400);
+      border-radius: 22px;
+      padding: clamp(18px, 5vw, 28px);
+      font-size: clamp(1.45rem, 6vw, 2.55rem);
+      line-height: 1.26;
+      font-weight: 950;
+      letter-spacing: -0.035em;
+      color: var(--purple-800);
+      text-align: center;
+      overflow-wrap: anywhere;
+    }
+
+    .type-input-row {
+      display: grid;
+      grid-template-columns: minmax(80px, 130px) 1fr;
+      gap: 10px;
+      align-items: stretch;
+    }
+
+    .type-input-row input {
+      min-height: 58px;
+      border: 2px solid var(--line);
+      border-radius: 18px;
+      text-align: center;
+      font-size: 1.55rem;
+      font-weight: 950;
+      color: var(--purple-800);
+      background: #fff;
+      outline: none;
+    }
+
+    .type-input-row input:focus {
+      border-color: var(--purple-500);
+      box-shadow: 0 0 0 4px rgba(139, 92, 246, 0.13);
+    }
+
+    .type-input-row button,
+    .continue-btn {
+      border: 0;
+      border-radius: 18px;
+      background: var(--purple-600);
+      color: #fff;
+      font-weight: 900;
+      padding: 14px 18px;
+      min-height: 58px;
+    }
+
+    .continue-btn {
+      width: 100%;
+      margin-top: 12px;
+    }
+
+    .practice-feedback {
+      border-radius: 18px;
+      padding: 13px 14px;
+      font-weight: 850;
+      line-height: 1.45;
+    }
+
+    .practice-feedback.good {
+      background: var(--green-bg);
+      color: #14532d;
+    }
+
+    .practice-feedback.bad {
+      background: var(--red-bg);
+      color: #7f1d1d;
+    }
+
+    .practice-tools {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      align-items: center;
+      margin-top: 12px;
+    }
+
     .empty-state {
       text-align: center;
       padding: 40px 20px;
@@ -734,13 +900,19 @@
         grid-template-columns: repeat(2, 1fr);
       }
 
-      .study-tools {
+      .study-tools,
+      .practice-tools {
         flex-direction: column;
         align-items: stretch;
       }
 
-      .study-tools button {
+      .study-tools button,
+      .practice-tools button {
         width: 100%;
+      }
+
+      .type-input-row {
+        grid-template-columns: 1fr;
       }
 
       .flashcard-stage {
@@ -830,7 +1002,7 @@
           <div style="display:grid; gap:10px; margin-top:12px;">
             <button id="syncSheetsBtn" class="primary-btn" type="button">Đồng bộ từ Google Sheets</button>
             <button id="publishBtn" class="soft-btn" type="button">Xuất bản chunks cho học sinh</button>
-            <button id="resetSampleBtn" class="danger-btn" type="button">Khôi phục dữ liệu mẫu</button>
+            <button id="resetSampleBtn" class="danger-btn" type="button">Xóa dữ liệu trong trình duyệt</button>
           </div>
         </article>
 
@@ -904,6 +1076,55 @@ E: active</pre></div>
         <button id="doneBackBtn" class="primary-btn" type="button">Quay lại bảng học</button>
       </div>
     </section>
+
+    <section id="practicePage" class="page">
+      <div id="practiceContainer" class="practice-shell study-shell">
+        <div class="study-head">
+          <div class="study-title">
+            <button id="backFromPracticeBtn" class="back-btn" type="button" aria-label="Quay lại">←</button>
+            <h2 id="practiceTitle">Luyện tập</h2>
+          </div>
+          <div class="counter"><span id="practiceNumber">1</span>/<span id="practiceTotal">1</span></div>
+        </div>
+
+        <div class="progress-line" aria-label="Tiến độ luyện tập"><i id="practiceProgress"></i></div>
+
+        <div class="practice-card">
+          <div>
+            <div id="practiceLabel" class="practice-label">Câu hỏi</div>
+            <div id="practiceMeaning" class="practice-meaning">...</div>
+          </div>
+
+          <div id="quizArea" class="hidden">
+            <div id="quizOptions" class="quiz-options"></div>
+          </div>
+
+          <div id="typeArea" class="hidden">
+            <div id="typePrompt" class="type-prompt">...</div>
+            <div class="type-input-row">
+              <input id="typeAnswer" type="text" maxlength="1" autocomplete="off" autocapitalize="off" spellcheck="false" aria-label="Gõ chữ cái còn thiếu" />
+              <button id="typeSubmitBtn" type="button">Kiểm tra</button>
+            </div>
+          </div>
+
+          <div id="practiceFeedback" class="practice-feedback hidden"></div>
+          <button id="practiceContinueBtn" class="continue-btn hidden" type="button">Câu tiếp theo →</button>
+        </div>
+
+        <div class="practice-tools">
+          <button id="shufflePracticeBtn" class="soft-btn" type="button">Trộn câu</button>
+          <button id="restartPracticeBtn" class="soft-btn" type="button">Làm lại phần này</button>
+        </div>
+      </div>
+
+      <div id="practiceDone" class="empty-state hidden">
+        <div class="emoji">✅</div>
+        <h2>Hoàn thành luyện tập!</h2>
+        <p>Đúng: <strong id="practiceCorrectCount">0</strong> · Sai: <strong id="practiceWrongCount">0</strong></p>
+        <button id="practiceDoneBackBtn" class="primary-btn" type="button">Quay lại bảng học</button>
+      </div>
+    </section>
+
   </main>
 
   <div id="toast" class="toast"></div>
@@ -949,6 +1170,15 @@ E: active</pre></div>
     let currentCardIndex = 0;
     let currentTopic = null;
     let isFlipped = false;
+    let practiceType = null;
+    let practiceQueue = [];
+    let originalPracticeQueue = [];
+    let currentPracticeIndex = 0;
+    let practiceCorrect = 0;
+    let practiceWrong = 0;
+    let currentQuizOptions = [];
+    let currentTypePrompt = null;
+    let practiceAnswered = false;
 
     function loadAppData() {
       try {
@@ -1350,8 +1580,224 @@ E: active</pre></div>
       appData.lastStudyDate = today;
     }
 
+
+
     // ============================================================
-    // 6. RENDER DASHBOARD
+    // 6. QUIZ + TYPE PRACTICE
+    // ============================================================
+    function startPractice(topicName, type, onlyDue = true) {
+      practiceType = type;
+      currentTopic = topicName;
+
+      const now = new Date();
+      const topicChunks = appData.chunks.filter(chunk => chunk.topic === topicName && chunk.active !== false);
+      const dueChunks = topicChunks.filter(chunk => new Date(chunk.nextReview) <= now);
+      practiceQueue = onlyDue ? dueChunks : topicChunks;
+
+      if (!practiceQueue.length && onlyDue) {
+        showToast("Hôm nay không còn cụm đến hạn trong chủ đề này. App sẽ cho luyện toàn bộ chủ đề.");
+        practiceQueue = topicChunks;
+      }
+
+      if (!practiceQueue.length) {
+        showToast("Chủ đề này chưa có chunks");
+        return;
+      }
+
+      originalPracticeQueue = [...practiceQueue];
+      currentPracticeIndex = 0;
+      practiceCorrect = 0;
+      practiceWrong = 0;
+      practiceAnswered = false;
+      currentQuizOptions = [];
+      currentTypePrompt = null;
+
+      showPage("practice");
+      renderPracticeItem();
+    }
+
+    function renderPracticeItem() {
+      const container = $("practiceContainer");
+      const done = $("practiceDone");
+      const progress = $("practiceProgress");
+
+      if (currentPracticeIndex >= practiceQueue.length) {
+        container.classList.add("hidden");
+        done.classList.remove("hidden");
+        $("practiceCorrectCount").textContent = practiceCorrect;
+        $("practiceWrongCount").textContent = practiceWrong;
+        progress.style.width = "100%";
+        return;
+      }
+
+      container.classList.remove("hidden");
+      done.classList.add("hidden");
+      practiceAnswered = false;
+      currentTypePrompt = null;
+
+      const card = practiceQueue[currentPracticeIndex];
+      const isQuiz = practiceType === "quiz";
+
+      $("practiceTitle").textContent = `${isQuiz ? "Quiz" : "Gõ chữ"}: ${currentTopic || card.topic}`;
+      $("practiceNumber").textContent = currentPracticeIndex + 1;
+      $("practiceTotal").textContent = practiceQueue.length;
+      $("practiceMeaning").textContent = isQuiz
+        ? card.meaning
+        : "Gõ chữ cái còn thiếu trong cụm tiếng Anh.";
+      $("practiceLabel").textContent = isQuiz
+        ? "Chọn English chunk đúng"
+        : card.meaning;
+      $("practiceFeedback").className = "practice-feedback hidden";
+      $("practiceFeedback").textContent = "";
+      $("practiceContinueBtn").classList.add("hidden");
+      progress.style.width = `${(currentPracticeIndex / practiceQueue.length) * 100}%`;
+
+      if (isQuiz) {
+        $("quizArea").classList.remove("hidden");
+        $("typeArea").classList.add("hidden");
+        currentQuizOptions = buildQuizOptions(card);
+        renderQuizOptions(card);
+      } else {
+        $("quizArea").classList.add("hidden");
+        $("typeArea").classList.remove("hidden");
+        currentTypePrompt = buildTypePrompt(card.chunk);
+        $("typePrompt").textContent = currentTypePrompt.masked;
+        $("typeAnswer").value = "";
+        $("typeAnswer").disabled = false;
+        $("typeSubmitBtn").disabled = false;
+        setTimeout(() => $("typeAnswer").focus(), 80);
+      }
+    }
+
+    function buildQuizOptions(card) {
+      const sameTopic = appData.chunks.filter(item => item.active !== false && item.topic === card.topic && item.id !== card.id);
+      const allOther = appData.chunks.filter(item => item.active !== false && item.id !== card.id && item.topic !== card.topic);
+      const distractors = shuffleArray([...sameTopic, ...allOther]).slice(0, 3);
+      return shuffleArray([card, ...distractors]).map((item, index) => ({
+        id: item.id,
+        chunk: item.chunk,
+        isCorrect: item.id === card.id,
+        letter: ["A", "B", "C", "D"][index] || String(index + 1)
+      }));
+    }
+
+    function renderQuizOptions(card) {
+      const options = $("quizOptions");
+      options.innerHTML = currentQuizOptions.map(option => `
+        <button class="quiz-option" type="button" data-option-id="${escapeAttr(option.id)}" aria-label="${option.letter}. ${escapeAttr(option.chunk)}">
+          <span class="letter">${option.letter}</span>
+          <span>${escapeHTML(option.chunk)}</span>
+        </button>
+      `).join("");
+
+      options.querySelectorAll(".quiz-option").forEach(button => {
+        button.addEventListener("click", () => submitQuizAnswer(button.dataset.optionId));
+      });
+    }
+
+    function submitQuizAnswer(selectedId) {
+      if (practiceAnswered) return;
+      practiceAnswered = true;
+
+      const card = practiceQueue[currentPracticeIndex];
+      const selected = currentQuizOptions.find(option => option.id === selectedId);
+      const isCorrect = Boolean(selected?.isCorrect);
+
+      $("quizOptions").querySelectorAll(".quiz-option").forEach(button => {
+        const option = currentQuizOptions.find(item => item.id === button.dataset.optionId);
+        button.disabled = true;
+        if (option?.isCorrect) button.classList.add("correct");
+        if (button.dataset.optionId === selectedId && !option?.isCorrect) button.classList.add("wrong");
+      });
+
+      showPracticeFeedback(isCorrect,
+        isCorrect ? "Đúng rồi!" : `Chưa đúng. Đáp án đúng là: ${card.chunk}`
+      );
+      recordPracticeReview(card, isCorrect);
+      $("practiceContinueBtn").classList.remove("hidden");
+    }
+
+    function buildTypePrompt(chunk) {
+      const indexes = [];
+      for (let i = 0; i < chunk.length; i++) {
+        if (/[A-Za-z]/.test(chunk[i])) indexes.push(i);
+      }
+
+      if (!indexes.length) {
+        return { masked: chunk, answer: "", full: chunk };
+      }
+
+      const missingIndex = indexes[Math.floor(Math.random() * indexes.length)];
+      return {
+        masked: chunk.slice(0, missingIndex) + "_" + chunk.slice(missingIndex + 1),
+        answer: chunk[missingIndex],
+        full: chunk
+      };
+    }
+
+    function submitTypeAnswer() {
+      if (practiceAnswered || practiceType !== "type") return;
+
+      const answer = cleanCell($("typeAnswer").value);
+      if (!answer) {
+        showToast("Hãy gõ 1 chữ cái còn thiếu");
+        return;
+      }
+
+      practiceAnswered = true;
+      const card = practiceQueue[currentPracticeIndex];
+      const correctLetter = currentTypePrompt.answer;
+      const isCorrect = answer.toLowerCase() === correctLetter.toLowerCase();
+
+      $("typeAnswer").disabled = true;
+      $("typeSubmitBtn").disabled = true;
+
+      showPracticeFeedback(isCorrect,
+        isCorrect
+          ? `Đúng rồi! Cụm đầy đủ: ${currentTypePrompt.full}`
+          : `Chưa đúng. Chữ đúng là “${correctLetter}”. Cụm đầy đủ: ${currentTypePrompt.full}`
+      );
+      recordPracticeReview(card, isCorrect);
+      $("practiceContinueBtn").classList.remove("hidden");
+    }
+
+    function showPracticeFeedback(isCorrect, message) {
+      const feedback = $("practiceFeedback");
+      feedback.className = `practice-feedback ${isCorrect ? "good" : "bad"}`;
+      feedback.textContent = message;
+      if (isCorrect) practiceCorrect++;
+      else practiceWrong++;
+    }
+
+    function recordPracticeReview(card, isCorrect) {
+      const appIndex = appData.chunks.findIndex(chunk => chunk.id === card.id);
+      if (appIndex === -1) return;
+
+      const rating = isCorrect ? "ok" : "forgot";
+      appData.chunks[appIndex] = applyReview(appData.chunks[appIndex], rating);
+      appData.reviewHistory.push({
+        id: card.id,
+        topic: card.topic,
+        rating,
+        mode: practiceType,
+        date: new Date().toISOString()
+      });
+      updateStreak();
+      saveAppData();
+      renderAll();
+    }
+
+    function nextPracticeItem() {
+      if (!practiceAnswered) {
+        showToast("Hãy trả lời câu này trước");
+        return;
+      }
+      currentPracticeIndex++;
+      renderPracticeItem();
+    }
+
+    // ============================================================
+    // 7. RENDER DASHBOARD
     // ============================================================
     function renderAll() {
       renderDashboard();
@@ -1408,7 +1854,6 @@ E: active</pre></div>
               <button type="button" data-topic="${escapeAttr(topic)}" data-action="flash">📇<br>Flashcard</button>
               <button type="button" data-topic="${escapeAttr(topic)}" data-action="quiz">❓<br>Quiz</button>
               <button type="button" data-topic="${escapeAttr(topic)}" data-action="type">⌨️<br>Gõ</button>
-              <button type="button" data-topic="${escapeAttr(topic)}" data-action="match">🔗<br>Nối</button>
             </div>
           </article>
         `;
@@ -1419,7 +1864,8 @@ E: active</pre></div>
           const topic = button.dataset.topic;
           const action = button.dataset.action;
           if (action === "flash") startStudy(topic, true);
-          else showToast("Tính năng này sẽ thêm ở phiên bản sau");
+          if (action === "quiz") startPractice(topic, "quiz", false);
+          if (action === "type") startPractice(topic, "type", false);
         });
       });
     }
@@ -1489,12 +1935,12 @@ E: active</pre></div>
         showToast("Đã xuất bản chunks");
       });
       $("resetSampleBtn").addEventListener("click", () => {
-        if (!confirm("Bạn có chắc muốn khôi phục dữ liệu mẫu? Tiến độ hiện tại sẽ bị xóa trong trình duyệt này.")) return;
+        if (!confirm("Bạn có chắc muốn xóa dữ liệu trong trình duyệt này? Tiến độ học hiện tại sẽ bị xóa.")) return;
         appData = structuredCloneSafe(defaultAppData);
         saveAppData();
         renderAll();
-        addSyncLog("Đã khôi phục dữ liệu mẫu.");
-        showToast("Đã khôi phục dữ liệu mẫu");
+        addSyncLog("Đã xóa dữ liệu trong trình duyệt này.");
+        showToast("Đã xóa dữ liệu trong trình duyệt")
       });
 
       $("flashcard").addEventListener("click", flipCard);
@@ -1514,6 +1960,29 @@ E: active</pre></div>
 
       $("backToDashboardBtn").addEventListener("click", () => showPage("student"));
       $("doneBackBtn").addEventListener("click", () => showPage("student"));
+      $("backFromPracticeBtn").addEventListener("click", () => showPage("student"));
+      $("practiceDoneBackBtn").addEventListener("click", () => showPage("student"));
+      $("practiceContinueBtn").addEventListener("click", nextPracticeItem);
+      $("typeSubmitBtn").addEventListener("click", submitTypeAnswer);
+      $("typeAnswer").addEventListener("keydown", event => {
+        if (event.key === "Enter") submitTypeAnswer();
+      });
+      $("restartPracticeBtn").addEventListener("click", () => {
+        practiceQueue = [...originalPracticeQueue];
+        currentPracticeIndex = 0;
+        practiceCorrect = 0;
+        practiceWrong = 0;
+        renderPracticeItem();
+      });
+      $("shufflePracticeBtn").addEventListener("click", () => {
+        practiceQueue = shuffleArray([...practiceQueue]);
+        originalPracticeQueue = [...practiceQueue];
+        currentPracticeIndex = 0;
+        practiceCorrect = 0;
+        practiceWrong = 0;
+        renderPracticeItem();
+        showToast("Đã trộn câu");
+      });
       $("restartStudyBtn").addEventListener("click", () => {
         studyQueue = [...originalStudyQueue];
         currentCardIndex = 0;
@@ -1545,7 +2014,7 @@ E: active</pre></div>
 
     function showPage(page) {
       currentMode = page;
-      ["studentPage", "teacherPage", "studyPage"].forEach(id => $(id).classList.remove("active"));
+      ["studentPage", "teacherPage", "studyPage", "practicePage"].forEach(id => $(id).classList.remove("active"));
       $("studentModeBtn").classList.remove("active");
       $("teacherModeBtn").classList.remove("active");
 
@@ -1561,6 +2030,10 @@ E: active</pre></div>
 
       if (page === "study") {
         $("studyPage").classList.add("active");
+      }
+
+      if (page === "practice") {
+        $("practicePage").classList.add("active");
       }
     }
 
