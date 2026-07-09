@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Vocab - Google Sheets Flashcards</title>
+  <title>IELTS Vocab - Google Sheets Flashcards</title>
   <style>
     :root {
       --purple-800: #4c1d95;
@@ -673,6 +673,46 @@
       line-height: 1.25;
       font-weight: 900;
       letter-spacing: -0.035em;
+      white-space: pre-line;
+    }
+
+    .api-form {
+      display: grid;
+      gap: 8px;
+      margin-top: 12px;
+    }
+
+    .api-form label {
+      font-weight: 900;
+      color: var(--text);
+    }
+
+    .api-form input {
+      width: 100%;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      padding: 12px 14px;
+      font: inherit;
+      font-weight: 750;
+      outline: none;
+      background: #fff;
+    }
+
+    .api-form input:focus {
+      border-color: var(--purple-500);
+      box-shadow: 0 0 0 4px rgba(108, 92, 231, 0.12);
+    }
+
+    .api-form .row {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .api-status {
+      font-size: 0.86rem;
+      color: var(--muted);
+      font-weight: 750;
     }
 
     .quiz-options {
@@ -926,7 +966,7 @@
     <header class="topbar">
       <div class="brand">
         <div class="brand-mark">📚</div>
-        <div>Vocab.</div>
+        <div>IELTS Vocab.</div>
       </div>
       <nav class="mode-switch" aria-label="Chuyển chế độ">
         <button id="studentModeBtn" class="active" type="button">Học sinh</button>
@@ -992,12 +1032,23 @@
           <h2>Bảng giáo viên</h2>
           <p>Đồng bộ chunks từ Google Sheet. Bản này đọc dữ liệu bằng Google Sheets API và lưu vào trình duyệt bằng localStorage.</p>
 
-          <div class="config-box"><pre>const GOOGLE_SHEETS_CONFIG = {
-  apiKey: "AIzaSyAoxsn90GwRSPeuiB1BHB-3N96EdvrSDQE",
-  spreadsheetId: "1uidrswxf1vqAXNaov11PpPjx5AQI29DrlafL9ht5X9g",
-  sheetName: "Vocab Chunks",
-  range: "A:E"
-};</pre></div>
+          <div class="config-box"><pre>Google Sheet đang dùng:
+spreadsheetId: 1uidrswxf1vqAXNaov11PpPjx5AQI29DrlafL9ht5X9g
+sheetName: Vocab Chunks
+range: A:E
+
+API key có thể nhập trực tiếp trong code ở mục GOOGLE_SHEETS_CONFIG
+hoặc dán vào ô bên dưới rồi bấm Lưu API key.</pre></div>
+
+          <div class="api-form">
+            <label for="apiKeyInput">API Key Google Sheets</label>
+            <input id="apiKeyInput" type="password" placeholder="Dán API key thật ở đây nếu trong code vẫn là YOUR_API_KEY_HERE" autocomplete="off" spellcheck="false" />
+            <div class="row">
+              <button id="saveApiKeyBtn" class="soft-btn" type="button">Lưu API key trên máy này</button>
+              <button id="clearApiKeyBtn" class="danger-btn" type="button">Xóa API key đã lưu</button>
+            </div>
+            <div id="apiKeyStatus" class="api-status">Đang kiểm tra API key...</div>
+          </div>
 
           <div style="display:grid; gap:10px; margin-top:12px;">
             <button id="syncSheetsBtn" class="primary-btn" type="button">Đồng bộ từ Google Sheets</button>
@@ -1136,11 +1187,16 @@ E: active</pre></div>
     // Các dòng còn lại đã được viết theo đúng yêu cầu của bạn.
     // ============================================================
     const GOOGLE_SHEETS_CONFIG = {
+      // Bạn có thể thay dòng này bằng API key thật.
+      // Nếu không muốn sửa code, vào chế độ Giáo viên và dán API key vào ô nhập ở đó.
       apiKey: "AIzaSyAoxsn90GwRSPeuiB1BHB-3N96EdvrSDQE",
       spreadsheetId: "1uidrswxf1vqAXNaov11PpPjx5AQI29DrlafL9ht5X9g",
       sheetName: "Vocab Chunks",
       range: "A:E"
     };
+
+    const API_KEY_STORAGE_KEY = "ielts_vocab_google_sheets_api_key";
+    const APP_VERSION = "Quiz dùng Example cột D · v3";
 
     // ============================================================
     // 2. DỮ LIỆU BAN ĐẦU
@@ -1206,6 +1262,44 @@ E: active</pre></div>
       return JSON.parse(JSON.stringify(value));
     }
 
+    function getCodeApiKey() {
+      const key = cleanCell(GOOGLE_SHEETS_CONFIG.apiKey);
+      return key && key !== "YOUR_API_KEY_HERE" ? key : "";
+    }
+
+    function getSavedApiKey() {
+      return cleanCell(localStorage.getItem(API_KEY_STORAGE_KEY) || "");
+    }
+
+    function getGoogleSheetsApiKey() {
+      // API key lưu trong ô giáo viên ưu tiên hơn, để sửa nhanh không cần upload lại GitHub.
+      return getSavedApiKey() || getCodeApiKey();
+    }
+
+    function maskApiKey(key) {
+      if (!key) return "chưa nhập";
+      if (key.length <= 10) return "đã nhập";
+      return `${key.slice(0, 7)}...${key.slice(-4)}`;
+    }
+
+    function updateApiKeyStatus() {
+      const status = $("apiKeyStatus");
+      const input = $("apiKeyInput");
+      if (!status || !input) return;
+      const saved = getSavedApiKey();
+      const code = getCodeApiKey();
+      const active = getGoogleSheetsApiKey();
+      input.value = saved;
+      if (saved) {
+        status.textContent = `Đang dùng API key đã lưu trên máy này: ${maskApiKey(saved)}`;
+      } else if (code) {
+        status.textContent = `Đang dùng API key trong code: ${maskApiKey(code)}`;
+      } else {
+        status.textContent = "Chưa có API key thật. Hãy dán API key vào ô trên hoặc sửa dòng apiKey trong code.";
+      }
+      return active;
+    }
+
     // ============================================================
     // 4. GOOGLE SHEETS SYNC
     // ============================================================
@@ -1213,8 +1307,9 @@ E: active</pre></div>
       try {
         addSyncLog("Bắt đầu đồng bộ từ Google Sheets...");
 
-        if (!GOOGLE_SHEETS_CONFIG.apiKey || GOOGLE_SHEETS_CONFIG.apiKey === "YOUR_API_KEY_HERE") {
-          throw new Error("Bạn chưa nhập API Key thật vào dòng apiKey.");
+        const activeApiKey = getGoogleSheetsApiKey();
+        if (!activeApiKey) {
+          throw new Error("Bạn chưa nhập API Key thật. Hãy sửa dòng apiKey trong code hoặc dán API key trong ô ở chế độ Giáo viên rồi bấm Lưu.");
         }
 
         const importedChunks = await fetchChunksFromGoogleSheets();
@@ -1241,11 +1336,12 @@ E: active</pre></div>
     }
 
     async function fetchChunksFromGoogleSheets() {
-      const { apiKey, spreadsheetId, sheetName, range } = GOOGLE_SHEETS_CONFIG;
+      const { spreadsheetId, sheetName, range } = GOOGLE_SHEETS_CONFIG;
+      const apiKey = getGoogleSheetsApiKey();
       const safeSheetName = String(sheetName).replace(/'/g, "''");
       const a1Range = `'${safeSheetName}'!${range}`;
       const encodedRange = encodeURIComponent(a1Range);
-      const url = `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${encodedRange}?key=${apiKey}`;
+      const url = `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${encodedRange}?key=${encodeURIComponent(apiKey)}`;
 
       const response = await fetch(url);
       const data = await response.json().catch(() => ({}));
@@ -1605,6 +1701,14 @@ E: active</pre></div>
         return;
       }
 
+      if (type === "quiz") {
+        const uniqueActiveChunks = getUniqueActiveChunks();
+        if (uniqueActiveChunks.length < 4) {
+          showToast("Quiz cần ít nhất 4 chunks đang active trong Google Sheet để tạo A/B/C/D.");
+          return;
+        }
+      }
+
       originalPracticeQueue = [...practiceQueue];
       currentPracticeIndex = 0;
       practiceCorrect = 0;
@@ -1647,7 +1751,7 @@ E: active</pre></div>
       if (isQuiz) {
         currentQuizPrompt = buildQuizPrompt(card);
         $("practiceMeaning").textContent = currentQuizPrompt.question;
-        $("practiceLabel").textContent = "Chọn English chunk đúng để điền vào chỗ trống";
+        $("practiceLabel").textContent = currentQuizPrompt.warning || "Chọn English chunk đúng để điền vào chỗ trống";
       } else {
         $("practiceMeaning").textContent = "Gõ chữ cái còn thiếu trong cụm tiếng Anh.";
         $("practiceLabel").textContent = card.meaning;
@@ -1679,54 +1783,90 @@ E: active</pre></div>
       const chunk = cleanCell(card.chunk);
       const blank = "___________";
 
+      // Quiz BẮT BUỘC dùng cột D / example, không dùng Vietnamese meaning.
       if (!example) {
         return {
-          question: `${blank}`,
-          usedExample: false
+          question: "Cột D / example của chunk này đang trống. Hãy thêm câu ví dụ vào Google Sheet rồi đồng bộ lại.",
+          warning: "Thiếu example ở cột D"
         };
       }
 
       if (!chunk) {
         return {
           question: example,
-          usedExample: true
+          warning: "Thiếu English chunk ở cột B"
         };
       }
 
-      // Dùng câu full trong cột D (example), rồi khoét lỗ đúng English chunk.
-      // Ví dụ: "I get to dive into topics on the Internet." -> "I ___________ topics on the Internet."
-      const escapedChunk = escapeRegExp(chunk);
-      const exactRegex = new RegExp(escapedChunk, "i");
-
-      if (exactRegex.test(example)) {
+      const chunkRegex = makeChunkRegex(chunk);
+      if (chunkRegex.test(example)) {
         return {
-          question: example.replace(exactRegex, blank),
-          usedExample: true
+          question: example.replace(chunkRegex, blank),
+          warning: "Chọn English chunk đúng để điền vào chỗ trống"
         };
       }
 
-      // Nếu giáo viên nhập example nhưng example không chứa chính xác chunk,
-      // app vẫn cho làm quiz nhưng giữ câu example gốc và thêm chỗ trống ở dưới.
+      // Nếu example không chứa chính xác chunk thì không thể khoét lỗ đúng.
+      // App vẫn hiện câu example để giáo viên thấy lỗi dữ liệu và sửa cột D.
       return {
-        question: `${example}
-${blank}`,
-        usedExample: true
+        question: example,
+        warning: `Example ở cột D chưa chứa đúng chunk: ${chunk}`
       };
+    }
+
+    function makeChunkRegex(chunk) {
+      // Hỗ trợ khác biệt nhỏ như nhiều khoảng trắng hoặc dấu nháy thẳng/cong.
+      const parts = cleanCell(chunk)
+        .split(/\s+/)
+        .filter(Boolean)
+        .map(part => escapeRegExp(part).replace(/[’']/g, "[’']"));
+      return new RegExp(parts.join("\\s+"), "i");
     }
 
     function escapeRegExp(value) {
       return String(value).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
     }
 
+
+    function getUniqueActiveChunks() {
+      const seen = new Set();
+      const result = [];
+      appData.chunks
+        .filter(item => item.active !== false && cleanCell(item.chunk))
+        .forEach(item => {
+          const key = normalizeChunkForCompare(item.chunk);
+          if (!seen.has(key)) {
+            seen.add(key);
+            result.push(item);
+          }
+        });
+      return result;
+    }
+
+    function normalizeChunkForCompare(value) {
+      return cleanCell(value).toLowerCase().replace(/[’]/g, "'").replace(/\s+/g, " ");
+    }
+
     function buildQuizOptions(card) {
-      const sameTopic = appData.chunks.filter(item => item.active !== false && item.topic === card.topic && item.id !== card.id);
-      const allOther = appData.chunks.filter(item => item.active !== false && item.id !== card.id && item.topic !== card.topic);
-      const distractors = shuffleArray([...sameTopic, ...allOther]).slice(0, 3);
-      return shuffleArray([card, ...distractors]).map((item, index) => ({
+      const allUnique = getUniqueActiveChunks();
+      const correctKey = normalizeChunkForCompare(card.chunk);
+      const correctOption = allUnique.find(item => normalizeChunkForCompare(item.chunk) === correctKey) || card;
+
+      const sameTopic = allUnique.filter(item =>
+        item.topic === card.topic && normalizeChunkForCompare(item.chunk) !== correctKey
+      );
+      const otherTopics = allUnique.filter(item =>
+        item.topic !== card.topic && normalizeChunkForCompare(item.chunk) !== correctKey
+      );
+
+      const distractors = shuffleArray([...sameTopic, ...otherTopics]).slice(0, 3);
+      const fourOptions = shuffleArray([correctOption, ...distractors]).slice(0, 4);
+
+      return fourOptions.map((item, index) => ({
         id: item.id,
         chunk: item.chunk,
-        isCorrect: item.id === card.id,
-        letter: ["A", "B", "C", "D"][index] || String(index + 1)
+        isCorrect: normalizeChunkForCompare(item.chunk) === correctKey,
+        letter: ["A", "B", "C", "D"][index]
       }));
     }
 
@@ -1946,8 +2086,10 @@ ${blank}`,
     }
 
     function renderTeacherPanel() {
+      updateApiKeyStatus();
       if (!$("syncLog").children.length) {
-        addSyncLog("Sẵn sàng đồng bộ. Hãy nhập API Key vào file HTML trước.");
+        addSyncLog(`${APP_VERSION}`);
+        addSyncLog("Sẵn sàng đồng bộ. Hãy nhập API Key trong code hoặc dán vào ô API Key ở bảng giáo viên.");
       }
       renderImportedPreview(appData.chunks.slice(0, 20));
     }
@@ -1977,6 +2119,23 @@ ${blank}`,
       $("teacherModeBtn").addEventListener("click", () => showPage("teacher"));
       $("studyDueBtn").addEventListener("click", startDueStudy);
       $("syncSheetsBtn").addEventListener("click", syncFromGoogleSheets);
+      $("saveApiKeyBtn").addEventListener("click", () => {
+        const value = cleanCell($("apiKeyInput").value);
+        if (!value || value === "YOUR_API_KEY_HERE") {
+          showToast("Hãy dán API key thật trước khi lưu");
+          return;
+        }
+        localStorage.setItem(API_KEY_STORAGE_KEY, value);
+        updateApiKeyStatus();
+        addSyncLog("Đã lưu API key trên máy này.");
+        showToast("Đã lưu API key");
+      });
+      $("clearApiKeyBtn").addEventListener("click", () => {
+        localStorage.removeItem(API_KEY_STORAGE_KEY);
+        updateApiKeyStatus();
+        addSyncLog("Đã xóa API key lưu trên máy này. Nếu trong code có API key thật, app sẽ dùng API key trong code.");
+        showToast("Đã xóa API key đã lưu");
+      });
       $("publishBtn").addEventListener("click", () => {
         appData.published = true;
         saveAppData();
