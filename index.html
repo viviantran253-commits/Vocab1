@@ -915,7 +915,7 @@ E: active</pre></div>
     // Các dòng còn lại đã được viết theo đúng yêu cầu của bạn.
     // ============================================================
     const GOOGLE_SHEETS_CONFIG = {
-      apiKey: "AIzaSyAoxsn90GwRSPeuiB1BHB-3N96EdvrSDQE",
+      apiKey: "YOUR_API_KEY_HERE",
       spreadsheetId: "1uidrswxf1vqAXNaov11PpPjx5AQI29DrlafL9ht5X9g",
       sheetName: "Vocab Chunks",
       range: "A:E"
@@ -996,6 +996,7 @@ E: active</pre></div>
         addSyncLog(`Đã thêm mới: ${result.added}`);
         addSyncLog(`Đã cập nhật: ${result.updated}`);
         addSyncLog(`Đã bỏ qua không đổi: ${result.skipped}`);
+        addSyncLog(`Đã giữ lại tiến độ học: ${result.progressKept} chunks`);
         addSyncLog(`Đã xóa khỏi app vì không còn trong Sheet: ${result.removed}`);
         addSyncLog("Đồng bộ hoàn tất.");
 
@@ -1089,27 +1090,51 @@ E: active</pre></div>
     }
 
     function syncImportedChunksAsSourceOfTruth(importedChunks) {
-      // Google Sheet là nguồn dữ liệu chính.
-      // Sau khi đồng bộ, app CHỈ giữ những chunks đang có trong Google Sheet.
-      // Những chunks cũ có trong localStorage/code nhưng không còn trong Sheet sẽ bị xóa khỏi app.
+      // Google Sheet là nguồn dữ liệu chính về NỘI DUNG.
+      // localStorage là nguồn dữ liệu chính về TIẾN ĐỘ HỌC.
+      // Vì vậy khi sync lại, app chỉ cập nhật topic/chunk/meaning/example,
+      // nhưng giữ nguyên status, reviewCount, lastReviewed, nextReview,
+      // difficulty và masteryLevel của học sinh.
       let added = 0;
       let updated = 0;
       let skipped = 0;
       let removed = 0;
+      let progressKept = 0;
 
-      const existingChunks = Array.isArray(appData.chunks) ? appData.chunks : [];
-      const existingById = new Map(existingChunks.map(chunk => [chunk.id, chunk]));
-      const importedIds = new Set(importedChunks.map(chunk => chunk.id));
+      const existingChunks = Array.isArray(appData.chunks) ? appData.chunks.map(normalizeChunkRecord) : [];
+
+      const existingById = new Map();
+      const existingByChunkKey = new Map();
+      const existingByMeaningKey = new Map();
+
+      existingChunks.forEach(chunk => {
+        existingById.set(chunk.id, chunk);
+        existingByChunkKey.set(makeContentKey(chunk.topic, chunk.chunk), chunk);
+        existingByMeaningKey.set(makeContentKey(chunk.topic, chunk.meaning), chunk);
+      });
+
+      const matchedOldIds = new Set();
       const nextChunks = [];
 
-      importedChunks.forEach(newChunk => {
-        const oldChunk = existingById.get(newChunk.id);
+      importedChunks.forEach(newChunkRaw => {
+        const newChunk = normalizeChunkRecord(newChunkRaw);
 
-        if (!oldChunk) {
+        // 1) Ưu tiên match bằng id cũ.
+        // 2) Nếu giáo viên sửa nhẹ English chunk làm id đổi, thử match bằng topic + chunk.
+        // 3) Nếu giáo viên sửa English chunk nhưng giữ nguyên nghĩa tiếng Việt, thử match bằng topic + meaning.
+        // Cách này giúp sync lại mà không mất track học.
+        const oldChunk =
+          existingById.get(newChunk.id) ||
+          existingByChunkKey.get(makeContentKey(newChunk.topic, newChunk.chunk)) ||
+          existingByMeaningKey.get(makeContentKey(newChunk.topic, newChunk.meaning));
+
+        if (!oldChunk || matchedOldIds.has(oldChunk.id)) {
           nextChunks.push(newChunk);
           added++;
           return;
         }
+
+        matchedOldIds.add(oldChunk.id);
 
         const hasChanged =
           oldChunk.topic !== newChunk.topic ||
@@ -1119,22 +1144,44 @@ E: active</pre></div>
 
         nextChunks.push({
           ...oldChunk,
+
+          // Giữ id cũ để reviewHistory và tiến độ học không bị đứt.
+          id: oldChunk.id,
+
+          // Cập nhật nội dung từ Google Sheet.
           topic: newChunk.topic,
           chunk: newChunk.chunk,
           meaning: newChunk.meaning,
           example: newChunk.example,
           active: true,
+
+          // Giữ toàn bộ tiến độ học từ localStorage.
+          status: oldChunk.status || "new",
+          reviewCount: Number(oldChunk.reviewCount || 0),
+          lastReviewed: oldChunk.lastReviewed || null,
+          nextReview: oldChunk.nextReview || new Date().toISOString(),
+          difficulty: oldChunk.difficulty || "new",
+          masteryLevel: Number(oldChunk.masteryLevel || 0),
+          createdAt: oldChunk.createdAt || newChunk.createdAt,
           updatedAt: hasChanged ? new Date().toISOString() : oldChunk.updatedAt
         });
+
+        if (Number(oldChunk.reviewCount || 0) > 0 || Number(oldChunk.masteryLevel || 0) > 0) {
+          progressKept++;
+        }
 
         if (hasChanged) updated++;
         else skipped++;
       });
 
-      removed = existingChunks.filter(oldChunk => !importedIds.has(oldChunk.id)).length;
+      removed = existingChunks.filter(oldChunk => !matchedOldIds.has(oldChunk.id)).length;
       appData.chunks = nextChunks;
 
-      return { added, updated, skipped, removed };
+      return { added, updated, skipped, removed, progressKept };
+    }
+
+    function makeContentKey(topic, value) {
+      return `${cleanCell(topic).toLowerCase()}::${cleanCell(value).toLowerCase().replace(/\s+/g, " ")}`;
     }
 
     // ============================================================
