@@ -988,6 +988,81 @@
       transform: translateX(-50%) translateY(0);
     }
 
+
+    .teacher-lock {
+      position: fixed;
+      inset: 0;
+      z-index: 90;
+      display: grid;
+      place-items: center;
+      padding: 18px;
+      background: rgba(31, 27, 46, 0.42);
+      backdrop-filter: blur(8px);
+    }
+
+    .teacher-lock-card {
+      width: min(430px, 100%);
+      background: #fff;
+      border: 1px solid var(--line);
+      border-radius: 28px;
+      padding: 24px;
+      box-shadow: var(--shadow);
+    }
+
+    .teacher-lock-card h2 {
+      font-size: 1.35rem;
+      letter-spacing: -0.03em;
+      margin-bottom: 6px;
+    }
+
+    .teacher-lock-card p {
+      color: var(--muted);
+      font-weight: 700;
+      margin-bottom: 16px;
+    }
+
+    .pin-input {
+      width: 100%;
+      min-height: 62px;
+      border: 2px solid var(--line);
+      border-radius: 18px;
+      text-align: center;
+      font-size: 1.8rem;
+      letter-spacing: 0.35em;
+      font-weight: 950;
+      color: var(--purple-800);
+      outline: none;
+      background: var(--purple-50);
+    }
+
+    .pin-input:focus {
+      border-color: var(--purple-500);
+      box-shadow: 0 0 0 4px rgba(139, 92, 246, 0.13);
+    }
+
+    .lock-actions {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-top: 14px;
+    }
+
+    .lock-message {
+      min-height: 22px;
+      margin-top: 10px;
+      color: var(--red);
+      font-weight: 850;
+      text-align: center;
+    }
+
+    .teacher-unlock-note {
+      margin-top: 10px;
+      color: var(--muted);
+      font-size: 0.84rem;
+      font-weight: 650;
+      text-align: center;
+    }
+
     .hidden {
       display: none !important;
     }
@@ -1146,6 +1221,7 @@ hoặc dán vào ô bên dưới rồi bấm Lưu API key.</pre></div>
             <button id="syncSheetsBtn" class="primary-btn" type="button">Đồng bộ từ Google Sheets</button>
             <button id="publishBtn" class="soft-btn" type="button">Xuất bản chunks cho học sinh</button>
             <button id="resetSampleBtn" class="danger-btn" type="button">Xóa dữ liệu trong trình duyệt</button>
+            <button id="lockTeacherBtn" class="soft-btn" type="button">Khóa lại tab Giáo viên</button>
           </div>
         </article>
 
@@ -1245,7 +1321,7 @@ E: active</pre></div>
           <div id="typeArea" class="hidden">
             <div id="typePrompt" class="type-prompt">...</div>
             <div class="type-input-row">
-              <input id="typeAnswer" type="text" maxlength="1" autocomplete="off" autocapitalize="off" spellcheck="false" aria-label="Type chữ cái còn thiếu" />
+              <input id="typeAnswer" type="text" maxlength="1" autocomplete="off" autocapitalize="off" spellcheck="false" aria-label="Gõ chữ cái còn thiếu" />
               <button id="typeSubmitBtn" type="button">Kiểm tra</button>
             </div>
           </div>
@@ -1253,7 +1329,7 @@ E: active</pre></div>
           <div id="arrangeArea" class="hidden">
             <div id="arrangePrompt" class="arrange-prompt">...</div>
             <div class="arrange-section">
-              <div class="arrange-subtitle">Chọn các ô bên dưới để Arrange</div>
+              <div class="arrange-subtitle">Chọn các ô bên dưới để sắp xếp</div>
               <div id="arrangeBank" class="arrange-bank"></div>
             </div>
             <div class="arrange-section">
@@ -1287,6 +1363,21 @@ E: active</pre></div>
 
   </main>
 
+
+  <div id="teacherLock" class="teacher-lock hidden" role="dialog" aria-modal="true" aria-labelledby="teacherLockTitle">
+    <div class="teacher-lock-card">
+      <h2 id="teacherLockTitle">Nhập mật khẩu giáo viên</h2>
+      <p>Tab Giáo viên bị khóa. Hãy nhập mật khẩu 6 số để mở.</p>
+      <input id="teacherPinInput" class="pin-input" type="password" inputmode="numeric" pattern="[0-9]*" maxlength="6" placeholder="••••••" autocomplete="off" aria-label="Mật khẩu giáo viên 6 số" />
+      <div class="lock-actions">
+        <button id="teacherPinCancelBtn" class="soft-btn" type="button">Hủy</button>
+        <button id="teacherPinSubmitBtn" class="primary-btn" type="button">Mở khóa</button>
+      </div>
+      <div id="teacherPinMessage" class="lock-message"></div>
+      <div class="teacher-unlock-note">Mặc định: sửa mật khẩu trong dòng <strong>TEACHER_PIN</strong> của file HTML.</div>
+    </div>
+  </div>
+
   <div id="toast" class="toast"></div>
 
   <script>
@@ -1305,7 +1396,8 @@ E: active</pre></div>
     };
 
     const API_KEY_STORAGE_KEY = "ielts_vocab_google_sheets_api_key";
-    const APP_VERSION = "Quiz + Type + Arrange · v4";
+    const TEACHER_PIN = "123456"; // Đổi mật khẩu giáo viên 6 số ở đây.
+    const APP_VERSION = "Quiz + Gõ + Sắp xếp + Khóa giáo viên · v5";
 
     // ============================================================
     // 2. DỮ LIỆU BAN ĐẦU
@@ -1330,6 +1422,7 @@ E: active</pre></div>
 
     let appData = loadAppData();
     let currentMode = "student";
+    let teacherUnlocked = false;
     let studyQueue = [];
     let originalStudyQueue = [];
     let currentCardIndex = 0;
@@ -1859,7 +1952,7 @@ E: active</pre></div>
       const isType = practiceType === "type";
       const isArrange = practiceType === "arrange";
 
-      const modeLabel = isQuiz ? "Quiz" : (isType ? "Type" : "Arrange");
+      const modeLabel = isQuiz ? "Quiz" : (isType ? "Gõ" : "Sắp xếp");
       $("practiceTitle").textContent = `${modeLabel}: ${currentTopic || card.topic}`;
       $("practiceNumber").textContent = currentPracticeIndex + 1;
       $("practiceTotal").textContent = practiceQueue.length;
@@ -1883,7 +1976,7 @@ E: active</pre></div>
       }
 
       if (isType) {
-        $("practiceMeaning").textContent = "Type chữ cái còn thiếu trong cụm tiếng Anh.";
+        $("practiceMeaning").textContent = "Gõ chữ cái còn thiếu trong cụm tiếng Anh.";
         $("practiceLabel").textContent = card.meaning;
         $("typeArea").classList.remove("hidden");
         currentTypePrompt = buildTypePrompt(card.chunk);
@@ -1899,8 +1992,8 @@ E: active</pre></div>
         currentArrangePrompt = buildArrangePrompt(card.chunk);
         $("practiceMeaning").textContent = card.meaning;
         $("practiceLabel").textContent = currentArrangePrompt.kind === "words"
-          ? "Arrange các từ thành English chunk đúng"
-          : "Arrange các chữ cái thành từ đúng";
+          ? "Sắp xếp các từ thành English chunk đúng"
+          : "Sắp xếp các chữ cái thành từ đúng";
         $("arrangePrompt").textContent = currentArrangePrompt.kind === "words"
           ? "Bấm từng từ để xếp lại đúng thứ tự."
           : "Bấm từng chữ cái để ghép thành từ đúng.";
@@ -2129,8 +2222,8 @@ E: active</pre></div>
       if (practiceAnswered || practiceType !== "arrange" || !currentArrangePrompt) return;
       if (currentArrangePrompt.answerTiles.length !== currentArrangePrompt.sourceTiles.length) {
         showToast(currentArrangePrompt.kind === "words"
-          ? "Hãy Arrange đủ tất cả các từ trước khi kiểm tra"
-          : "Hãy Arrange đủ tất cả các chữ cái trước khi kiểm tra");
+          ? "Hãy sắp xếp đủ tất cả các từ trước khi kiểm tra"
+          : "Hãy sắp xếp đủ tất cả các chữ cái trước khi kiểm tra");
         return;
       }
 
@@ -2174,7 +2267,7 @@ E: active</pre></div>
 
       const answer = cleanCell($("typeAnswer").value);
       if (!answer) {
-        showToast("Hãy Type 1 chữ cái còn thiếu");
+        showToast("Hãy gõ 1 chữ cái còn thiếu");
         return;
       }
 
@@ -2287,8 +2380,8 @@ E: active</pre></div>
             <div class="topic-actions">
               <button type="button" data-topic="${escapeAttr(topic)}" data-action="flash">📇<br>Flashcard</button>
               <button type="button" data-topic="${escapeAttr(topic)}" data-action="quiz">❓<br>Quiz</button>
-              <button type="button" data-topic="${escapeAttr(topic)}" data-action="type">⌨️<br>Type</button>
-              <button type="button" data-topic="${escapeAttr(topic)}" data-action="arrange">🧩<br>Arrange</button>
+              <button type="button" data-topic="${escapeAttr(topic)}" data-action="type">⌨️<br>Gõ</button>
+              <button type="button" data-topic="${escapeAttr(topic)}" data-action="arrange">🧩<br>Sắp xếp</button>
             </div>
           </article>
         `;
@@ -2359,11 +2452,71 @@ E: active</pre></div>
     }
 
     // ============================================================
+    // 6B. KHÓA TAB GIÁO VIÊN
+    // ============================================================
+    function requestTeacherAccess() {
+      if (teacherUnlocked) {
+        showPage("teacher");
+        return;
+      }
+      openTeacherLock();
+    }
+
+    function openTeacherLock() {
+      $("teacherLock").classList.remove("hidden");
+      $("teacherPinInput").value = "";
+      $("teacherPinMessage").textContent = "";
+      setTimeout(() => $("teacherPinInput").focus(), 80);
+    }
+
+    function closeTeacherLock() {
+      $("teacherLock").classList.add("hidden");
+      $("teacherPinInput").value = "";
+      $("teacherPinMessage").textContent = "";
+    }
+
+    function submitTeacherPin() {
+      const value = cleanCell($("teacherPinInput").value);
+      if (!/^\d{6}$/.test(value)) {
+        $("teacherPinMessage").textContent = "Mật khẩu phải gồm đúng 6 số.";
+        return;
+      }
+
+      if (value !== TEACHER_PIN) {
+        $("teacherPinMessage").textContent = "Sai mật khẩu. Hãy thử lại.";
+        $("teacherPinInput").value = "";
+        $("teacherPinInput").focus();
+        return;
+      }
+
+      teacherUnlocked = true;
+      closeTeacherLock();
+      showPage("teacher");
+      showToast("Đã mở khóa tab Giáo viên");
+    }
+
+    function lockTeacherTab() {
+      teacherUnlocked = false;
+      closeTeacherLock();
+      showPage("student");
+      showToast("Đã khóa tab Giáo viên");
+    }
+
+    // ============================================================
     // 7. EVENTS
     // ============================================================
     function setupEvents() {
       $("studentModeBtn").addEventListener("click", () => showPage("student"));
-      $("teacherModeBtn").addEventListener("click", () => showPage("teacher"));
+      $("teacherModeBtn").addEventListener("click", requestTeacherAccess);
+      $("teacherPinSubmitBtn").addEventListener("click", submitTeacherPin);
+      $("teacherPinCancelBtn").addEventListener("click", closeTeacherLock);
+      $("teacherPinInput").addEventListener("keydown", event => {
+        if (event.key === "Enter") submitTeacherPin();
+        if (event.key === "Escape") closeTeacherLock();
+      });
+      $("teacherLock").addEventListener("click", event => {
+        if (event.target.id === "teacherLock") closeTeacherLock();
+      });
       $("studyDueBtn").addEventListener("click", startDueStudy);
       $("syncSheetsBtn").addEventListener("click", syncFromGoogleSheets);
       $("saveApiKeyBtn").addEventListener("click", () => {
@@ -2397,6 +2550,8 @@ E: active</pre></div>
         addSyncLog("Đã xóa dữ liệu trong trình duyệt này.");
         showToast("Đã xóa dữ liệu trong trình duyệt")
       });
+
+      $("lockTeacherBtn").addEventListener("click", lockTeacherTab);
 
       $("flashcard").addEventListener("click", flipCard);
       $("flashcard").addEventListener("keydown", event => {
