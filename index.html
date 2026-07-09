@@ -1,0 +1,1756 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>IELTS Vocab - Google Sheets Flashcards</title>
+  <style>
+    :root {
+      --purple-800: #4c1d95;
+      --purple-700: #5b21b6;
+      --purple-600: #6d28d9;
+      --purple-500: #8b5cf6;
+      --purple-400: #a78bfa;
+      --purple-100: #ede9fe;
+      --purple-50: #f5f3ff;
+      --bg: #f6f4fb;
+      --card: #ffffff;
+      --text: #1f1b2e;
+      --muted: #746f86;
+      --line: #e8e4f2;
+      --green: #16a34a;
+      --green-bg: #dcfce7;
+      --red: #dc2626;
+      --red-bg: #fee2e2;
+      --orange: #d97706;
+      --orange-bg: #fef3c7;
+      --blue: #2563eb;
+      --blue-bg: #dbeafe;
+      --shadow: 0 18px 45px -25px rgba(47, 32, 99, 0.38);
+      --shadow-soft: 0 10px 25px -18px rgba(47, 32, 99, 0.28);
+      --radius-lg: 24px;
+      --radius-md: 18px;
+      --radius-sm: 14px;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      min-height: 100vh;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background:
+        radial-gradient(circle at 50% -10%, rgba(139, 92, 246, 0.18), transparent 42%),
+        var(--bg);
+      color: var(--text);
+      line-height: 1.45;
+    }
+
+    button, input, textarea, select {
+      font: inherit;
+    }
+
+    button {
+      cursor: pointer;
+    }
+
+    .app {
+      width: min(1040px, 100%);
+      margin: 0 auto;
+      padding: 18px 14px 40px;
+    }
+
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: clamp(1.1rem, 3vw, 1.45rem);
+      font-weight: 850;
+      letter-spacing: -0.03em;
+    }
+
+    .brand-mark {
+      width: 42px;
+      height: 42px;
+      border-radius: 15px;
+      display: grid;
+      place-items: center;
+      color: white;
+      background: linear-gradient(135deg, var(--purple-500), var(--purple-700));
+      box-shadow: var(--shadow-soft);
+    }
+
+    .mode-switch {
+      display: flex;
+      gap: 8px;
+      background: #fff;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      padding: 5px;
+      box-shadow: var(--shadow-soft);
+    }
+
+    .mode-switch button {
+      border: 0;
+      background: transparent;
+      color: var(--muted);
+      padding: 9px 12px;
+      border-radius: 999px;
+      font-size: 0.9rem;
+      font-weight: 800;
+    }
+
+    .mode-switch button.active {
+      background: var(--purple-600);
+      color: #fff;
+    }
+
+    .page {
+      display: none;
+    }
+
+    .page.active {
+      display: block;
+    }
+
+    .hero {
+      background: linear-gradient(135deg, var(--purple-700), var(--purple-400));
+      color: #fff;
+      border-radius: var(--radius-lg);
+      padding: clamp(18px, 4vw, 30px);
+      box-shadow: var(--shadow);
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 16px;
+      align-items: center;
+      margin-bottom: 16px;
+    }
+
+    .hero .label {
+      text-transform: uppercase;
+      letter-spacing: 0.09em;
+      font-size: 0.78rem;
+      font-weight: 800;
+      opacity: 0.85;
+      margin-bottom: 6px;
+    }
+
+    .hero h1 {
+      font-size: clamp(2rem, 6vw, 3.1rem);
+      letter-spacing: -0.05em;
+      line-height: 1.05;
+      margin-bottom: 4px;
+    }
+
+    .hero p {
+      font-weight: 700;
+      opacity: 0.9;
+    }
+
+    .hero button {
+      border: 1px solid rgba(255, 255, 255, 0.28);
+      color: #fff;
+      background: rgba(255, 255, 255, 0.16);
+      padding: 14px 18px;
+      border-radius: 18px;
+      font-weight: 850;
+      min-width: 130px;
+      transition: 0.15s ease;
+    }
+
+    .hero button:hover {
+      background: rgba(255, 255, 255, 0.24);
+      transform: translateY(-1px);
+    }
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+
+    .stat-card {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: var(--radius-md);
+      padding: 17px 14px;
+      text-align: center;
+      box-shadow: var(--shadow-soft);
+      min-height: 98px;
+      display: grid;
+      place-items: center;
+    }
+
+    .stat-card .num {
+      color: var(--purple-700);
+      font-size: clamp(1.35rem, 4vw, 2rem);
+      font-weight: 900;
+      letter-spacing: -0.04em;
+      line-height: 1;
+    }
+
+    .stat-card .name {
+      color: var(--muted);
+      font-size: 0.83rem;
+      font-weight: 750;
+      margin-top: 6px;
+    }
+
+    .accuracy-card,
+    .panel,
+    .topic-card,
+    .study-shell {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-soft);
+    }
+
+    .accuracy-card {
+      padding: 18px;
+      margin-bottom: 22px;
+    }
+
+    .section-title {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+      margin: 20px 0 12px;
+    }
+
+    .section-title h2 {
+      font-size: 1.15rem;
+      letter-spacing: -0.02em;
+    }
+
+    .small-muted {
+      color: var(--muted);
+      font-size: 0.86rem;
+      font-weight: 650;
+    }
+
+    .bars {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 7px;
+      height: 94px;
+      align-items: end;
+      padding-top: 12px;
+    }
+
+    .bar-day {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 7px;
+      min-width: 0;
+    }
+
+    .bar-fill {
+      width: 100%;
+      max-width: 42px;
+      min-height: 4px;
+      border-radius: 9px 9px 3px 3px;
+      background: var(--purple-500);
+      opacity: 0.96;
+    }
+
+    .bar-fill.empty {
+      background: var(--purple-100);
+    }
+
+    .bar-day span {
+      color: var(--muted);
+      font-size: 0.72rem;
+      font-weight: 750;
+    }
+
+    .topic-list {
+      display: grid;
+      gap: 14px;
+    }
+
+    .topic-card {
+      padding: 18px;
+    }
+
+    .topic-card-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 10px;
+      margin-bottom: 14px;
+    }
+
+    .topic-card h3 {
+      font-size: clamp(1rem, 4vw, 1.22rem);
+      line-height: 1.2;
+      text-transform: uppercase;
+      letter-spacing: -0.01em;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 6px 9px;
+      border-radius: 999px;
+      color: var(--green);
+      background: var(--green-bg);
+      font-size: 0.78rem;
+      font-weight: 850;
+      white-space: nowrap;
+    }
+
+    .progress-line {
+      height: 9px;
+      background: var(--purple-100);
+      overflow: hidden;
+      border-radius: 999px;
+      margin: 10px 0 14px;
+    }
+
+    .progress-line i {
+      display: block;
+      height: 100%;
+      width: 0%;
+      border-radius: 999px;
+      background: linear-gradient(90deg, var(--purple-700), var(--purple-400));
+    }
+
+    .topic-actions {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 9px;
+      margin-top: 12px;
+    }
+
+    .topic-actions button,
+    .soft-btn,
+    .primary-btn,
+    .danger-btn {
+      border: 0;
+      border-radius: 15px;
+      padding: 12px 10px;
+      font-weight: 850;
+      transition: 0.15s ease;
+    }
+
+    .topic-actions button {
+      background: var(--purple-50);
+      color: var(--text);
+      border: 1px solid var(--line);
+      min-height: 58px;
+    }
+
+    .topic-actions button:hover,
+    .soft-btn:hover {
+      transform: translateY(-1px);
+      border-color: var(--purple-300, #c4b5fd);
+      background: var(--purple-100);
+    }
+
+    .primary-btn {
+      background: var(--purple-600);
+      color: #fff;
+    }
+
+    .primary-btn:hover {
+      background: var(--purple-700);
+      transform: translateY(-1px);
+    }
+
+    .soft-btn {
+      color: var(--purple-700);
+      background: var(--purple-50);
+      border: 1px solid var(--line);
+    }
+
+    .danger-btn {
+      color: var(--red);
+      background: var(--red-bg);
+    }
+
+    .two-col {
+      display: grid;
+      grid-template-columns: 1.05fr 0.95fr;
+      gap: 16px;
+      align-items: start;
+    }
+
+    .panel {
+      padding: 18px;
+    }
+
+    .panel h2,
+    .panel h3 {
+      letter-spacing: -0.02em;
+      margin-bottom: 6px;
+    }
+
+    .panel p {
+      color: var(--muted);
+      font-weight: 620;
+      font-size: 0.94rem;
+      margin-bottom: 14px;
+    }
+
+    .config-box {
+      background: #0f1020;
+      color: #f7f5ff;
+      border-radius: 18px;
+      padding: 15px;
+      overflow-x: auto;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      font-size: 0.82rem;
+      line-height: 1.7;
+      margin: 12px 0;
+    }
+
+    .log-box,
+    .preview-box {
+      min-height: 220px;
+      max-height: 360px;
+      overflow: auto;
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      background: #fbfaff;
+      padding: 12px;
+    }
+
+    .log-line {
+      display: flex;
+      gap: 9px;
+      padding: 8px 0;
+      border-bottom: 1px solid rgba(232, 228, 242, 0.75);
+      color: var(--text);
+      font-size: 0.9rem;
+      font-weight: 650;
+    }
+
+    .log-line:last-child {
+      border-bottom: 0;
+    }
+
+    .time {
+      color: var(--muted);
+      font-size: 0.78rem;
+      white-space: nowrap;
+    }
+
+    .preview-item {
+      padding: 11px;
+      border: 1px solid var(--line);
+      background: #fff;
+      border-radius: 15px;
+      margin-bottom: 9px;
+    }
+
+    .preview-item strong {
+      display: block;
+      color: var(--purple-800);
+      font-size: 0.96rem;
+      margin-bottom: 3px;
+    }
+
+    .preview-item span {
+      display: block;
+      color: var(--muted);
+      font-size: 0.86rem;
+      font-weight: 650;
+    }
+
+    .study-shell {
+      padding: clamp(14px, 3vw, 22px);
+    }
+
+    .study-head {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      align-items: center;
+      margin-bottom: 14px;
+    }
+
+    .study-title {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      min-width: 0;
+    }
+
+    .back-btn {
+      width: 40px;
+      height: 40px;
+      border-radius: 14px;
+      border: 1px solid var(--line);
+      background: #fff;
+      color: var(--text);
+      font-weight: 900;
+    }
+
+    .study-title h2 {
+      font-size: clamp(1rem, 4vw, 1.25rem);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .counter {
+      color: var(--muted);
+      font-weight: 850;
+      white-space: nowrap;
+    }
+
+    .flashcard-stage {
+      perspective: 1600px;
+      height: min(56vh, 410px);
+      min-height: 310px;
+      margin-bottom: 14px;
+    }
+
+    .flashcard {
+      height: 100%;
+      position: relative;
+      transform-style: preserve-3d;
+      transition: transform 0.55s cubic-bezier(0.2, 0.85, 0.2, 1);
+      cursor: pointer;
+      user-select: none;
+    }
+
+    .flashcard.flipped {
+      transform: rotateY(180deg);
+    }
+
+    .face {
+      position: absolute;
+      inset: 0;
+      border-radius: 30px;
+      backface-visibility: hidden;
+      -webkit-backface-visibility: hidden;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: clamp(22px, 6vw, 44px);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+
+    .front-face {
+      background: #fff;
+      border: 1px solid var(--line);
+    }
+
+    .back-face {
+      transform: rotateY(180deg);
+      color: #fff;
+      border: 1px solid rgba(255, 255, 255, 0.18);
+      background:
+        radial-gradient(circle at 85% 12%, rgba(255,255,255,0.22), transparent 25%),
+        linear-gradient(135deg, var(--purple-700), var(--purple-400));
+    }
+
+    .card-text {
+      font-size: clamp(1.55rem, 5.8vw, 2.55rem);
+      line-height: 1.22;
+      font-weight: 900;
+      letter-spacing: -0.035em;
+      max-width: 900px;
+    }
+
+    .back-face .card-text {
+      color: #fff;
+      text-wrap: balance;
+    }
+
+    .example-text {
+      margin-top: 18px;
+      font-size: clamp(0.95rem, 3vw, 1.12rem);
+      line-height: 1.6;
+      color: rgba(255,255,255,0.9);
+      font-weight: 650;
+      max-width: 780px;
+    }
+
+    .mini-hint {
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: 16px;
+      color: var(--muted);
+      font-size: 0.85rem;
+      font-weight: 750;
+      opacity: 0.78;
+    }
+
+    .back-face .mini-hint {
+      color: rgba(255,255,255,0.82);
+    }
+
+    .review-buttons {
+      display: none;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px;
+      margin-top: 12px;
+    }
+
+    .review-buttons.show {
+      display: grid;
+    }
+
+    .review-buttons button {
+      min-height: 66px;
+      border: 0;
+      border-radius: 18px;
+      font-weight: 900;
+      color: #fff;
+      box-shadow: var(--shadow-soft);
+      transition: 0.14s ease;
+    }
+
+    .review-buttons button:hover {
+      transform: translateY(-1px);
+      filter: saturate(1.04);
+    }
+
+    .btn-forgot { background: #ef4444; }
+    .btn-hard { background: #f59e0b; }
+    .btn-ok { background: #3b82f6; }
+    .btn-easy { background: #22c55e; }
+
+    .study-tools {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      align-items: center;
+      margin-top: 12px;
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 40px 20px;
+      background: #fff;
+      border: 1px solid var(--line);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-soft);
+    }
+
+    .empty-state .emoji {
+      font-size: 3rem;
+      margin-bottom: 12px;
+    }
+
+    .empty-state h2 {
+      margin-bottom: 8px;
+    }
+
+    .empty-state p {
+      color: var(--muted);
+      margin-bottom: 18px;
+      font-weight: 650;
+    }
+
+    .toast {
+      position: fixed;
+      left: 50%;
+      bottom: 18px;
+      transform: translateX(-50%) translateY(20px);
+      background: #171427;
+      color: white;
+      padding: 12px 16px;
+      border-radius: 999px;
+      font-size: 0.92rem;
+      font-weight: 800;
+      opacity: 0;
+      pointer-events: none;
+      transition: 0.18s ease;
+      z-index: 100;
+      box-shadow: var(--shadow);
+      max-width: calc(100vw - 24px);
+      text-align: center;
+    }
+
+    .toast.show {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+
+    .hidden {
+      display: none !important;
+    }
+
+    @media (max-width: 820px) {
+      .two-col {
+        grid-template-columns: 1fr;
+      }
+
+      .stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+
+    @media (max-width: 560px) {
+      .app {
+        padding: 14px 12px 30px;
+      }
+
+      .topbar {
+        align-items: flex-start;
+      }
+
+      .mode-switch button {
+        padding: 8px 10px;
+        font-size: 0.82rem;
+      }
+
+      .hero {
+        grid-template-columns: 1fr;
+      }
+
+      .hero button {
+        width: 100%;
+      }
+
+      .topic-actions {
+        grid-template-columns: repeat(2, 1fr);
+      }
+
+      .review-buttons {
+        grid-template-columns: repeat(2, 1fr);
+      }
+
+      .study-tools {
+        flex-direction: column;
+        align-items: stretch;
+      }
+
+      .study-tools button {
+        width: 100%;
+      }
+
+      .flashcard-stage {
+        min-height: 330px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="app">
+    <header class="topbar">
+      <div class="brand">
+        <div class="brand-mark">📚</div>
+        <div>IELTS Vocab.</div>
+      </div>
+      <nav class="mode-switch" aria-label="Chuyển chế độ">
+        <button id="studentModeBtn" class="active" type="button">Học sinh</button>
+        <button id="teacherModeBtn" type="button">Giáo viên</button>
+      </nav>
+    </header>
+
+    <section id="studentPage" class="page active">
+      <div class="hero">
+        <div>
+          <div class="label">Đến hạn hôm nay</div>
+          <h1><span id="dueCountHero">0</span> cụm</h1>
+          <p>🔥 Streak <span id="streakHero">0</span> ngày</p>
+        </div>
+        <button id="studyDueBtn" type="button">Học ngay →</button>
+      </div>
+
+      <div class="stats-grid">
+        <article class="stat-card">
+          <div>
+            <div class="num">🔥 <span id="streakStat">0</span></div>
+            <div class="name">Streak</div>
+          </div>
+        </article>
+        <article class="stat-card">
+          <div>
+            <div class="num" id="masteredStat">0</div>
+            <div class="name">Thành thạo</div>
+          </div>
+        </article>
+        <article class="stat-card">
+          <div>
+            <div class="num" id="newStat">0</div>
+            <div class="name">Chưa học</div>
+          </div>
+        </article>
+        <article class="stat-card">
+          <div>
+            <div class="num" id="accuracyStat">0%</div>
+            <div class="name">Độ chính xác</div>
+          </div>
+        </article>
+      </div>
+
+      <section class="accuracy-card">
+        <div class="section-title" style="margin:0 0 6px;">
+          <h2>Độ chính xác 7 ngày</h2>
+          <div class="small-muted"><span id="reviewCount7Days">0</span> lượt ôn</div>
+        </div>
+        <div class="bars" id="accuracyBars"></div>
+      </section>
+
+      <div class="section-title">
+        <h2>Chủ đề (<span id="topicCount">0</span>)</h2>
+        <span class="small-muted" id="lastSyncText">Chưa đồng bộ</span>
+      </div>
+      <div id="topicList" class="topic-list"></div>
+    </section>
+
+    <section id="teacherPage" class="page">
+      <div class="two-col">
+        <article class="panel">
+          <h2>Bảng giáo viên</h2>
+          <p>Đồng bộ chunks từ Google Sheet. Bản này đọc dữ liệu bằng Google Sheets API và lưu vào trình duyệt bằng localStorage.</p>
+
+          <div class="config-box"><pre>const GOOGLE_SHEETS_CONFIG = {
+  apiKey: "AIzaSyAoxsn90GwRSPeuiB1BHB-3N96EdvrSDQE",
+  spreadsheetId: "1uidrswxf1vqAXNaov11PpPjx5AQI29DrlafL9ht5X9g",
+  sheetName: "Vocab Chunks",
+  range: "A:E"
+};</pre></div>
+
+          <div style="display:grid; gap:10px; margin-top:12px;">
+            <button id="syncSheetsBtn" class="primary-btn" type="button">Đồng bộ từ Google Sheets</button>
+            <button id="publishBtn" class="soft-btn" type="button">Xuất bản chunks cho học sinh</button>
+            <button id="resetSampleBtn" class="danger-btn" type="button">Khôi phục dữ liệu mẫu</button>
+          </div>
+        </article>
+
+        <article class="panel">
+          <h3>Yêu cầu trong Google Sheet</h3>
+          <p>Tab phải tên là <strong>Vocab Chunks</strong>. Hàng đầu tiên nên có 5 cột dưới đây.</p>
+          <div class="config-box"><pre>A: topic
+B: chunk
+C: meaning
+D: example
+E: active</pre></div>
+          <p>Cột <strong>active</strong> để TRUE hoặc để trống thì app sẽ lấy. Nếu ghi FALSE, app sẽ bỏ qua chunk đó.</p>
+        </article>
+      </div>
+
+      <div class="two-col" style="margin-top:16px;">
+        <article class="panel">
+          <h3>Nhật ký đồng bộ</h3>
+          <div id="syncLog" class="log-box"></div>
+        </article>
+        <article class="panel">
+          <h3>Xem trước chunks đã nhập</h3>
+          <div id="importPreview" class="preview-box"></div>
+        </article>
+      </div>
+    </section>
+
+    <section id="studyPage" class="page">
+      <div id="studyContainer" class="study-shell">
+        <div class="study-head">
+          <div class="study-title">
+            <button id="backToDashboardBtn" class="back-btn" type="button" aria-label="Quay lại">←</button>
+            <h2 id="studyTopicTitle">Chủ đề</h2>
+          </div>
+          <div class="counter"><span id="cardNumber">1</span>/<span id="cardTotal">1</span></div>
+        </div>
+
+        <div class="progress-line" aria-label="Tiến độ phiên học"><i id="studyProgress"></i></div>
+
+        <div class="flashcard-stage">
+          <div id="flashcard" class="flashcard" role="button" tabindex="0" aria-label="Nhấn để lật thẻ">
+            <div class="face front-face">
+              <div id="frontText" class="card-text">...</div>
+              <div class="mini-hint">Chạm để xem đáp án</div>
+            </div>
+            <div class="face back-face">
+              <div id="backText" class="card-text">...</div>
+              <div id="exampleText" class="example-text"></div>
+              <div class="mini-hint">Chạm lần nữa để quay lại tiếng Việt</div>
+            </div>
+          </div>
+        </div>
+
+        <div id="reviewButtons" class="review-buttons" aria-label="Nút đánh giá">
+          <button class="btn-forgot" data-rating="forgot" type="button">😵 Quên</button>
+          <button class="btn-hard" data-rating="hard" type="button">😕 Khó</button>
+          <button class="btn-ok" data-rating="ok" type="button">🙂 Ổn</button>
+          <button class="btn-easy" data-rating="easy" type="button">😎 Dễ</button>
+        </div>
+
+        <div class="study-tools">
+          <button id="shuffleStudyBtn" class="soft-btn" type="button">Trộn thẻ</button>
+          <button id="restartStudyBtn" class="soft-btn" type="button">Học lại phiên này</button>
+        </div>
+      </div>
+
+      <div id="studyDone" class="empty-state hidden">
+        <div class="emoji">🎉</div>
+        <h2>Hoàn thành phiên học!</h2>
+        <p>Bạn đã học xong các cụm trong phiên này.</p>
+        <button id="doneBackBtn" class="primary-btn" type="button">Quay lại bảng học</button>
+      </div>
+    </section>
+  </main>
+
+  <div id="toast" class="toast"></div>
+
+  <script>
+    // ============================================================
+    // 1. CẤU HÌNH GOOGLE SHEETS API
+    // Bạn chỉ cần thay YOUR_API_KEY_HERE bằng API Key thật của bạn.
+    // Các dòng còn lại đã được viết theo đúng yêu cầu của bạn.
+    // ============================================================
+    const GOOGLE_SHEETS_CONFIG = {
+      apiKey: "AIzaSyAoxsn90GwRSPeuiB1BHB-3N96EdvrSDQE",
+      spreadsheetId: "1uidrswxf1vqAXNaov11PpPjx5AQI29DrlafL9ht5X9g",
+      sheetName: "Vocab Chunks",
+      range: "A:E"
+    };
+
+    // ============================================================
+    // 2. DỮ LIỆU MẪU - dùng khi chưa đồng bộ Google Sheets
+    // ============================================================
+    const SAMPLE_CHUNKS = [
+      {
+        topic: "Daily Life and Technology",
+        chunk: "I find myself leaning towards",
+        meaning: "Tôi có xu hướng nghiêng về",
+        example: "When I choose a device, I find myself leaning towards something simple.",
+        active: true
+      },
+      {
+        topic: "Daily Life and Technology",
+        chunk: "it’s hard to imagine not using it",
+        meaning: "Thật khó để tưởng tượng việc không sử dụng nó",
+        example: "My phone is so useful that it’s hard to imagine not using it.",
+        active: true
+      },
+      {
+        topic: "Daily Life and Technology",
+        chunk: "scroll through the Internet",
+        meaning: "Lướt Internet",
+        example: "Many students scroll through the Internet after school.",
+        active: true
+      },
+      {
+        topic: "Daily Life and Technology",
+        chunk: "keep in touch with my friends",
+        meaning: "Giữ liên lạc với bạn bè của tôi",
+        example: "Social media helps me keep in touch with my friends.",
+        active: true
+      },
+      {
+        topic: "Daily Life and Technology",
+        chunk: "stay updated on the latest news",
+        meaning: "Cập nhật những tin tức mới nhất",
+        example: "I use my phone to stay updated on the latest news.",
+        active: true
+      },
+      {
+        topic: "Daily Life and Technology",
+        chunk: "catch up on things",
+        meaning: "Bắt kịp mọi thứ / cập nhật tình hình",
+        example: "At the weekend, I catch up on things I missed during the week.",
+        active: true
+      },
+      {
+        topic: "Daily Life and Technology",
+        chunk: "get things done",
+        meaning: "Hoàn thành công việc / làm xong việc",
+        example: "A clear plan helps me get things done faster.",
+        active: true
+      },
+      {
+        topic: "Daily Life and Technology",
+        chunk: "pick up skills",
+        meaning: "Học hỏi kỹ năng",
+        example: "You can pick up skills by watching useful videos online.",
+        active: true
+      },
+      {
+        topic: "Daily Life and Technology",
+        chunk: "get to dive into",
+        meaning: "Có cơ hội khám phá sâu vào",
+        example: "Online courses allow me to get to dive into topics I like.",
+        active: true
+      },
+      {
+        topic: "Daily Life and Technology",
+        chunk: "every now and then",
+        meaning: "Thỉnh thoảng",
+        example: "I watch English videos every now and then.",
+        active: true
+      },
+      {
+        topic: "Daily Life and Technology",
+        chunk: "a perfect stress reliever for me",
+        meaning: "Một cách giảm căng thẳng hoàn hảo đối với tôi",
+        example: "Listening to music is a perfect stress reliever for me.",
+        active: true
+      },
+      {
+        topic: "Daily Life and Technology",
+        chunk: "makes a huge difference",
+        meaning: "Tạo ra sự khác biệt lớn",
+        example: "Practising every day makes a huge difference.",
+        active: true
+      },
+      {
+        topic: "Daily Life and Technology",
+        chunk: "a game changer",
+        meaning: "Một thứ rất hữu ích / một yếu tố thay đổi tình hình rõ rệt",
+        example: "For language learning, flashcards can be a game changer.",
+        active: true
+      }
+    ];
+
+    // ============================================================
+    // 3. LOCALSTORAGE
+    // ============================================================
+    const STORAGE_KEY = "ielts_vocab_google_sheets_app_v1";
+
+    const defaultAppData = {
+      chunks: SAMPLE_CHUNKS.map(createChunkRecord),
+      reviewHistory: [],
+      streak: 0,
+      lastStudyDate: null,
+      lastSync: null,
+      published: false
+    };
+
+    let appData = loadAppData();
+    let currentMode = "student";
+    let studyQueue = [];
+    let originalStudyQueue = [];
+    let currentCardIndex = 0;
+    let currentTopic = null;
+    let isFlipped = false;
+
+    function loadAppData() {
+      try {
+        const saved = localStorage.getItem(STORAGE_KEY);
+        if (!saved) return structuredCloneSafe(defaultAppData);
+        const parsed = JSON.parse(saved);
+        if (!Array.isArray(parsed.chunks)) return structuredCloneSafe(defaultAppData);
+        return {
+          ...structuredCloneSafe(defaultAppData),
+          ...parsed,
+          chunks: parsed.chunks.map(normalizeChunkRecord)
+        };
+      } catch (error) {
+        console.warn(error);
+        return structuredCloneSafe(defaultAppData);
+      }
+    }
+
+    function saveAppData() {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(appData));
+    }
+
+    function structuredCloneSafe(value) {
+      return JSON.parse(JSON.stringify(value));
+    }
+
+    // ============================================================
+    // 4. GOOGLE SHEETS SYNC
+    // ============================================================
+    async function syncFromGoogleSheets() {
+      try {
+        addSyncLog("Bắt đầu đồng bộ từ Google Sheets...");
+
+        if (!GOOGLE_SHEETS_CONFIG.apiKey || GOOGLE_SHEETS_CONFIG.apiKey === "YOUR_API_KEY_HERE") {
+          throw new Error("Bạn chưa nhập API Key thật vào dòng apiKey.");
+        }
+
+        const importedChunks = await fetchChunksFromGoogleSheets();
+        addSyncLog(`Đã đọc ${importedChunks.length} chunks từ Google Sheets.`);
+
+        const result = upsertImportedChunks(importedChunks);
+        appData.lastSync = new Date().toISOString();
+        saveAppData();
+
+        addSyncLog(`Đã thêm mới: ${result.added}`);
+        addSyncLog(`Đã cập nhật: ${result.updated}`);
+        addSyncLog(`Đã bỏ qua trùng lặp: ${result.skipped}`);
+        addSyncLog("Đồng bộ hoàn tất.");
+
+        renderImportedPreview(importedChunks);
+        renderAll();
+        showToast("Đồng bộ Google Sheets thành công");
+      } catch (error) {
+        addSyncLog("Lỗi: " + error.message);
+        showToast("Đồng bộ thất bại: " + error.message);
+      }
+    }
+
+    async function fetchChunksFromGoogleSheets() {
+      const { apiKey, spreadsheetId, sheetName, range } = GOOGLE_SHEETS_CONFIG;
+      const safeSheetName = String(sheetName).replace(/'/g, "''");
+      const a1Range = `'${safeSheetName}'!${range}`;
+      const encodedRange = encodeURIComponent(a1Range);
+      const url = `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${encodedRange}?key=${apiKey}`;
+
+      const response = await fetch(url);
+      const data = await response.json().catch(() => ({}));
+
+      if (!response.ok) {
+        const message = data?.error?.message || "Không thể đọc dữ liệu từ Google Sheets.";
+        throw new Error(message);
+      }
+
+      if (!data.values || data.values.length < 2) {
+        throw new Error("Google Sheet chưa có dữ liệu. Hãy kiểm tra tab, range và hàng tiêu đề.");
+      }
+
+      return convertSheetRowsToChunks(data.values);
+    }
+
+    function convertSheetRowsToChunks(values) {
+      const headers = values[0].map(value => normalizeHeader(value));
+      const topicIndex = headers.indexOf("topic");
+      const chunkIndex = headers.indexOf("chunk");
+      const meaningIndex = headers.indexOf("meaning");
+      const exampleIndex = headers.indexOf("example");
+      const activeIndex = headers.indexOf("active");
+
+      if (topicIndex === -1 || chunkIndex === -1 || meaningIndex === -1) {
+        throw new Error("Sheet cần có ít nhất 3 cột: topic, chunk, meaning.");
+      }
+
+      const imported = [];
+      const seenIds = new Set();
+      let missingRows = 0;
+      let inactiveRows = 0;
+      let duplicateRows = 0;
+
+      for (let rowIndex = 1; rowIndex < values.length; rowIndex++) {
+        const row = values[rowIndex];
+        const topic = cleanCell(row[topicIndex]);
+        const chunk = cleanCell(row[chunkIndex]);
+        const meaning = cleanCell(row[meaningIndex]);
+        const example = exampleIndex >= 0 ? cleanCell(row[exampleIndex]) : "";
+        const activeRaw = activeIndex >= 0 ? cleanCell(row[activeIndex]) : "TRUE";
+
+        if (!topic || !chunk || !meaning) {
+          missingRows++;
+          continue;
+        }
+
+        if (isInactive(activeRaw)) {
+          inactiveRows++;
+          continue;
+        }
+
+        const record = createChunkRecord({ topic, chunk, meaning, example, active: true });
+
+        if (seenIds.has(record.id)) {
+          duplicateRows++;
+          continue;
+        }
+
+        seenIds.add(record.id);
+        imported.push(record);
+      }
+
+      if (missingRows) addSyncLog(`Đã bỏ qua ${missingRows} dòng thiếu dữ liệu.`);
+      if (inactiveRows) addSyncLog(`Đã bỏ qua ${inactiveRows} dòng active = FALSE.`);
+      if (duplicateRows) addSyncLog(`Đã bỏ qua ${duplicateRows} dòng trùng trong Sheet.`);
+
+      if (!imported.length) {
+        throw new Error("Không có chunk hợp lệ để nhập.");
+      }
+
+      return imported;
+    }
+
+    function upsertImportedChunks(importedChunks) {
+      let added = 0;
+      let updated = 0;
+      let skipped = 0;
+
+      importedChunks.forEach(newChunk => {
+        const existingIndex = appData.chunks.findIndex(oldChunk => oldChunk.id === newChunk.id);
+
+        if (existingIndex === -1) {
+          appData.chunks.push(newChunk);
+          added++;
+          return;
+        }
+
+        const oldChunk = appData.chunks[existingIndex];
+        const hasChanged =
+          oldChunk.topic !== newChunk.topic ||
+          oldChunk.chunk !== newChunk.chunk ||
+          oldChunk.meaning !== newChunk.meaning ||
+          oldChunk.example !== newChunk.example;
+
+        if (hasChanged) {
+          appData.chunks[existingIndex] = {
+            ...oldChunk,
+            topic: newChunk.topic,
+            chunk: newChunk.chunk,
+            meaning: newChunk.meaning,
+            example: newChunk.example,
+            active: true,
+            updatedAt: new Date().toISOString()
+          };
+          updated++;
+        } else {
+          skipped++;
+        }
+      });
+
+      return { added, updated, skipped };
+    }
+
+    // ============================================================
+    // 5. FLASHCARD + SPACED REPETITION
+    // ============================================================
+    function startStudy(topicName, onlyDue = true) {
+      currentTopic = topicName;
+      const now = new Date();
+      const topicChunks = appData.chunks.filter(chunk => chunk.topic === topicName && chunk.active !== false);
+      const dueChunks = topicChunks.filter(chunk => new Date(chunk.nextReview) <= now);
+      studyQueue = onlyDue ? dueChunks : topicChunks;
+
+      if (!studyQueue.length && onlyDue) {
+        showToast("Hôm nay không còn cụm đến hạn trong chủ đề này");
+        studyQueue = topicChunks;
+      }
+
+      if (!studyQueue.length) {
+        showToast("Chủ đề này chưa có chunks");
+        return;
+      }
+
+      originalStudyQueue = [...studyQueue];
+      currentCardIndex = 0;
+      isFlipped = false;
+
+      showPage("study");
+      renderStudyCard();
+    }
+
+    function startDueStudy() {
+      const due = getDueChunks();
+      if (!due.length) {
+        showToast("Hôm nay chưa có cụm đến hạn. App sẽ cho học toàn bộ chunks.");
+        studyQueue = [...appData.chunks.filter(chunk => chunk.active !== false)];
+      } else {
+        studyQueue = due;
+      }
+
+      if (!studyQueue.length) {
+        showToast("Chưa có chunks để học. Hãy đồng bộ Google Sheets trước.");
+        return;
+      }
+
+      currentTopic = "Các cụm đến hạn";
+      originalStudyQueue = [...studyQueue];
+      currentCardIndex = 0;
+      isFlipped = false;
+      showPage("study");
+      renderStudyCard();
+    }
+
+    function renderStudyCard() {
+      const container = $("studyContainer");
+      const done = $("studyDone");
+      const progress = $("studyProgress");
+
+      if (currentCardIndex >= studyQueue.length) {
+        container.classList.add("hidden");
+        done.classList.remove("hidden");
+        return;
+      }
+
+      container.classList.remove("hidden");
+      done.classList.add("hidden");
+
+      const card = studyQueue[currentCardIndex];
+      isFlipped = false;
+      $("flashcard").classList.remove("flipped");
+      $("reviewButtons").classList.remove("show");
+      $("studyTopicTitle").textContent = currentTopic || card.topic;
+      $("cardNumber").textContent = currentCardIndex + 1;
+      $("cardTotal").textContent = studyQueue.length;
+      $("frontText").textContent = card.meaning;
+      $("backText").textContent = card.chunk;
+      $("exampleText").textContent = card.example || "";
+      progress.style.width = `${(currentCardIndex / studyQueue.length) * 100}%`;
+    }
+
+    function flipCard() {
+      if (!studyQueue.length || currentCardIndex >= studyQueue.length) return;
+      isFlipped = !isFlipped;
+      $("flashcard").classList.toggle("flipped", isFlipped);
+      $("reviewButtons").classList.toggle("show", isFlipped);
+    }
+
+    function reviewCurrentCard(rating) {
+      if (!isFlipped) {
+        showToast("Hãy lật thẻ để xem đáp án trước");
+        return;
+      }
+
+      const card = studyQueue[currentCardIndex];
+      const appIndex = appData.chunks.findIndex(chunk => chunk.id === card.id);
+      if (appIndex === -1) return;
+
+      const updated = applyReview(appData.chunks[appIndex], rating);
+      appData.chunks[appIndex] = updated;
+      appData.reviewHistory.push({
+        id: card.id,
+        topic: card.topic,
+        rating,
+        date: new Date().toISOString()
+      });
+      updateStreak();
+      saveAppData();
+
+      currentCardIndex++;
+      renderStudyCard();
+      renderAll();
+    }
+
+    function applyReview(chunk, rating) {
+      const now = new Date();
+      const updated = { ...chunk };
+      updated.reviewCount = Number(updated.reviewCount || 0) + 1;
+      updated.lastReviewed = now.toISOString();
+      updated.difficulty = rating;
+
+      let minutesToAdd = 0;
+      if (rating === "forgot") {
+        minutesToAdd = 5;
+        updated.masteryLevel = Math.max(0, Number(updated.masteryLevel || 0) - 1);
+        updated.status = "learning";
+      }
+
+      if (rating === "hard") {
+        minutesToAdd = 60 * 24;
+        updated.masteryLevel = Math.max(1, Number(updated.masteryLevel || 0));
+        updated.status = "learning";
+      }
+
+      if (rating === "ok") {
+        const level = Math.min(5, Number(updated.masteryLevel || 0) + 1);
+        updated.masteryLevel = level;
+        minutesToAdd = [0, 60 * 24 * 2, 60 * 24 * 4, 60 * 24 * 7, 60 * 24 * 14, 60 * 24 * 21][level];
+        updated.status = level >= 4 ? "mastered" : "learning";
+      }
+
+      if (rating === "easy") {
+        const level = Math.min(5, Number(updated.masteryLevel || 0) + 2);
+        updated.masteryLevel = level;
+        minutesToAdd = [0, 60 * 24 * 3, 60 * 24 * 7, 60 * 24 * 14, 60 * 24 * 30, 60 * 24 * 45][level];
+        updated.status = level >= 4 ? "mastered" : "learning";
+      }
+
+      updated.nextReview = new Date(now.getTime() + minutesToAdd * 60 * 1000).toISOString();
+      return updated;
+    }
+
+    function updateStreak() {
+      const today = toDateKey(new Date());
+      const last = appData.lastStudyDate;
+      if (last === today) return;
+
+      const yesterday = new Date();
+      yesterday.setDate(yesterday.getDate() - 1);
+      const yesterdayKey = toDateKey(yesterday);
+
+      if (last === yesterdayKey) {
+        appData.streak = Number(appData.streak || 0) + 1;
+      } else {
+        appData.streak = 1;
+      }
+
+      appData.lastStudyDate = today;
+    }
+
+    // ============================================================
+    // 6. RENDER DASHBOARD
+    // ============================================================
+    function renderAll() {
+      renderDashboard();
+      renderTeacherPanel();
+    }
+
+    function renderDashboard() {
+      const dueChunks = getDueChunks();
+      const mastered = appData.chunks.filter(chunk => chunk.status === "mastered" || Number(chunk.masteryLevel || 0) >= 4).length;
+      const newChunks = appData.chunks.filter(chunk => Number(chunk.reviewCount || 0) === 0).length;
+      const accuracy = calculateAccuracy(appData.reviewHistory);
+
+      $("dueCountHero").textContent = dueChunks.length;
+      $("streakHero").textContent = appData.streak || 0;
+      $("streakStat").textContent = appData.streak || 0;
+      $("masteredStat").textContent = mastered;
+      $("newStat").textContent = newChunks;
+      $("accuracyStat").textContent = `${accuracy}%`;
+      $("reviewCount7Days").textContent = getReviewsInLastDays(7).length;
+      $("lastSyncText").textContent = appData.lastSync ? `Đồng bộ: ${formatDateTime(appData.lastSync)}` : "Chưa đồng bộ";
+
+      renderAccuracyBars();
+      renderTopicList();
+    }
+
+    function renderTopicList() {
+      const list = $("topicList");
+      const topics = getTopics();
+      $("topicCount").textContent = topics.length;
+
+      if (!topics.length) {
+        list.innerHTML = `<div class="empty-state"><div class="emoji">📭</div><h2>Chưa có chủ đề</h2><p>Hãy vào chế độ giáo viên và đồng bộ từ Google Sheets.</p></div>`;
+        return;
+      }
+
+      list.innerHTML = topics.map(topic => {
+        const chunks = appData.chunks.filter(chunk => chunk.topic === topic);
+        const due = chunks.filter(chunk => new Date(chunk.nextReview) <= new Date()).length;
+        const mastered = chunks.filter(chunk => chunk.status === "mastered" || Number(chunk.masteryLevel || 0) >= 4).length;
+        const total = chunks.length;
+        const percent = total ? Math.round((mastered / total) * 100) : 0;
+        return `
+          <article class="topic-card">
+            <div class="topic-card-head">
+              <div>
+                <h3>${escapeHTML(topic)}</h3>
+                <div class="small-muted">${mastered}/${total} thành thạo · ${percent}%</div>
+              </div>
+              <span class="badge">active</span>
+            </div>
+            <div class="progress-line"><i style="width:${percent}%"></i></div>
+            <div class="small-muted">📅 ${due} đến hạn</div>
+            <div class="topic-actions">
+              <button type="button" data-topic="${escapeAttr(topic)}" data-action="flash">📇<br>Flashcard</button>
+              <button type="button" data-topic="${escapeAttr(topic)}" data-action="quiz">❓<br>Quiz</button>
+              <button type="button" data-topic="${escapeAttr(topic)}" data-action="type">⌨️<br>Gõ</button>
+              <button type="button" data-topic="${escapeAttr(topic)}" data-action="match">🔗<br>Nối</button>
+            </div>
+          </article>
+        `;
+      }).join("");
+
+      list.querySelectorAll("button[data-action]").forEach(button => {
+        button.addEventListener("click", () => {
+          const topic = button.dataset.topic;
+          const action = button.dataset.action;
+          if (action === "flash") startStudy(topic, true);
+          else showToast("Tính năng này sẽ thêm ở phiên bản sau");
+        });
+      });
+    }
+
+    function renderAccuracyBars() {
+      const bars = $("accuracyBars");
+      const days = [];
+      const labels = ["CN", "T2", "T3", "T4", "T5", "T6", "T7"];
+
+      for (let i = 6; i >= 0; i--) {
+        const date = new Date();
+        date.setDate(date.getDate() - i);
+        const key = toDateKey(date);
+        const reviews = appData.reviewHistory.filter(item => toDateKey(new Date(item.date)) === key);
+        const correct = reviews.filter(item => item.rating === "ok" || item.rating === "easy").length;
+        const percent = reviews.length ? Math.round((correct / reviews.length) * 100) : 0;
+        days.push({ label: labels[date.getDay()], percent, count: reviews.length });
+      }
+
+      bars.innerHTML = days.map(day => {
+        const height = day.count ? Math.max(12, Math.round(day.percent * 0.75)) : 4;
+        return `
+          <div class="bar-day" title="${day.count} lượt ôn · ${day.percent}%">
+            <div class="bar-fill ${day.count ? "" : "empty"}" style="height:${height}px"></div>
+            <span>${day.label}</span>
+          </div>
+        `;
+      }).join("");
+    }
+
+    function renderTeacherPanel() {
+      if (!$("syncLog").children.length) {
+        addSyncLog("Sẵn sàng đồng bộ. Hãy nhập API Key vào file HTML trước.");
+      }
+      renderImportedPreview(appData.chunks.slice(0, 20));
+    }
+
+    function renderImportedPreview(chunks) {
+      const preview = $("importPreview");
+      const items = chunks.slice(0, 40);
+      if (!items.length) {
+        preview.innerHTML = `<p class="small-muted">Chưa có dữ liệu xem trước.</p>`;
+        return;
+      }
+
+      preview.innerHTML = items.map(chunk => `
+        <div class="preview-item">
+          <strong>${escapeHTML(chunk.chunk)}</strong>
+          <span>${escapeHTML(chunk.meaning)}</span>
+          <span>Chủ đề: ${escapeHTML(chunk.topic)}</span>
+        </div>
+      `).join("");
+    }
+
+    // ============================================================
+    // 7. EVENTS
+    // ============================================================
+    function setupEvents() {
+      $("studentModeBtn").addEventListener("click", () => showPage("student"));
+      $("teacherModeBtn").addEventListener("click", () => showPage("teacher"));
+      $("studyDueBtn").addEventListener("click", startDueStudy);
+      $("syncSheetsBtn").addEventListener("click", syncFromGoogleSheets);
+      $("publishBtn").addEventListener("click", () => {
+        appData.published = true;
+        saveAppData();
+        addSyncLog("Đã xuất bản chunks cho học sinh trong trình duyệt này.");
+        showToast("Đã xuất bản chunks");
+      });
+      $("resetSampleBtn").addEventListener("click", () => {
+        if (!confirm("Bạn có chắc muốn khôi phục dữ liệu mẫu? Tiến độ hiện tại sẽ bị xóa trong trình duyệt này.")) return;
+        appData = structuredCloneSafe(defaultAppData);
+        saveAppData();
+        renderAll();
+        addSyncLog("Đã khôi phục dữ liệu mẫu.");
+        showToast("Đã khôi phục dữ liệu mẫu");
+      });
+
+      $("flashcard").addEventListener("click", flipCard);
+      $("flashcard").addEventListener("keydown", event => {
+        if (event.key === "Enter" || event.key === " ") {
+          event.preventDefault();
+          flipCard();
+        }
+      });
+
+      $("reviewButtons").querySelectorAll("button").forEach(button => {
+        button.addEventListener("click", event => {
+          event.stopPropagation();
+          reviewCurrentCard(button.dataset.rating);
+        });
+      });
+
+      $("backToDashboardBtn").addEventListener("click", () => showPage("student"));
+      $("doneBackBtn").addEventListener("click", () => showPage("student"));
+      $("restartStudyBtn").addEventListener("click", () => {
+        studyQueue = [...originalStudyQueue];
+        currentCardIndex = 0;
+        renderStudyCard();
+      });
+      $("shuffleStudyBtn").addEventListener("click", () => {
+        studyQueue = shuffleArray([...studyQueue]);
+        originalStudyQueue = [...studyQueue];
+        currentCardIndex = 0;
+        renderStudyCard();
+        showToast("Đã trộn thẻ");
+      });
+
+      document.addEventListener("keydown", event => {
+        if (!$("studyPage").classList.contains("active")) return;
+        if (event.key === "1") reviewCurrentCard("forgot");
+        if (event.key === "2") reviewCurrentCard("hard");
+        if (event.key === "3") reviewCurrentCard("ok");
+        if (event.key === "4") reviewCurrentCard("easy");
+      });
+    }
+
+    // ============================================================
+    // 8. HELPERS
+    // ============================================================
+    function $(id) {
+      return document.getElementById(id);
+    }
+
+    function showPage(page) {
+      currentMode = page;
+      ["studentPage", "teacherPage", "studyPage"].forEach(id => $(id).classList.remove("active"));
+      $("studentModeBtn").classList.remove("active");
+      $("teacherModeBtn").classList.remove("active");
+
+      if (page === "student") {
+        $("studentPage").classList.add("active");
+        $("studentModeBtn").classList.add("active");
+      }
+
+      if (page === "teacher") {
+        $("teacherPage").classList.add("active");
+        $("teacherModeBtn").classList.add("active");
+      }
+
+      if (page === "study") {
+        $("studyPage").classList.add("active");
+      }
+    }
+
+    function createChunkRecord(input) {
+      const now = new Date().toISOString();
+      return normalizeChunkRecord({
+        id: createChunkId(input.chunk),
+        topic: cleanCell(input.topic),
+        chunk: cleanCell(input.chunk),
+        meaning: cleanCell(input.meaning),
+        example: cleanCell(input.example),
+        active: input.active !== false,
+        status: "new",
+        reviewCount: 0,
+        lastReviewed: null,
+        nextReview: now,
+        difficulty: "new",
+        masteryLevel: 0,
+        createdAt: now,
+        updatedAt: now
+      });
+    }
+
+    function normalizeChunkRecord(chunk) {
+      const now = new Date().toISOString();
+      return {
+        id: chunk.id || createChunkId(chunk.chunk || ""),
+        topic: cleanCell(chunk.topic),
+        chunk: cleanCell(chunk.chunk),
+        meaning: cleanCell(chunk.meaning),
+        example: cleanCell(chunk.example),
+        active: chunk.active !== false,
+        status: chunk.status || "new",
+        reviewCount: Number(chunk.reviewCount || 0),
+        lastReviewed: chunk.lastReviewed || null,
+        nextReview: chunk.nextReview || now,
+        difficulty: chunk.difficulty || "new",
+        masteryLevel: Number(chunk.masteryLevel || 0),
+        createdAt: chunk.createdAt || now,
+        updatedAt: chunk.updatedAt || now
+      };
+    }
+
+    function createChunkId(chunk) {
+      return String(chunk)
+        .toLowerCase()
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .replace(/[^a-z0-9]+/g, "-")
+        .replace(/^-|-$/g, "") || cryptoRandomId();
+    }
+
+    function cryptoRandomId() {
+      if (window.crypto && crypto.randomUUID) return crypto.randomUUID();
+      return "id-" + Date.now() + "-" + Math.random().toString(16).slice(2);
+    }
+
+    function cleanCell(value) {
+      return String(value ?? "").trim();
+    }
+
+    function normalizeHeader(value) {
+      return cleanCell(value).toLowerCase();
+    }
+
+    function isInactive(value) {
+      const v = cleanCell(value).toLowerCase();
+      return v === "false" || v === "no" || v === "0" || v === "inactive" || v === "off";
+    }
+
+    function getTopics() {
+      return [...new Set(appData.chunks.filter(chunk => chunk.active !== false).map(chunk => chunk.topic).filter(Boolean))];
+    }
+
+    function getDueChunks() {
+      const now = new Date();
+      return appData.chunks.filter(chunk => chunk.active !== false && new Date(chunk.nextReview) <= now);
+    }
+
+    function calculateAccuracy(history) {
+      if (!history.length) return 0;
+      const correct = history.filter(item => item.rating === "ok" || item.rating === "easy").length;
+      return Math.round((correct / history.length) * 100);
+    }
+
+    function getReviewsInLastDays(days) {
+      const start = new Date();
+      start.setDate(start.getDate() - (days - 1));
+      start.setHours(0, 0, 0, 0);
+      return appData.reviewHistory.filter(item => new Date(item.date) >= start);
+    }
+
+    function toDateKey(date) {
+      const d = new Date(date);
+      const y = d.getFullYear();
+      const m = String(d.getMonth() + 1).padStart(2, "0");
+      const day = String(d.getDate()).padStart(2, "0");
+      return `${y}-${m}-${day}`;
+    }
+
+    function formatDateTime(value) {
+      try {
+        return new Intl.DateTimeFormat("vi-VN", {
+          day: "2-digit",
+          month: "2-digit",
+          hour: "2-digit",
+          minute: "2-digit"
+        }).format(new Date(value));
+      } catch {
+        return "vừa xong";
+      }
+    }
+
+    function addSyncLog(message) {
+      const log = $("syncLog");
+      if (!log) return;
+      const line = document.createElement("div");
+      line.className = "log-line";
+      const time = new Date().toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit", second: "2-digit" });
+      line.innerHTML = `<span class="time">${time}</span><span>${escapeHTML(message)}</span>`;
+      log.prepend(line);
+    }
+
+    function showToast(message) {
+      const toast = $("toast");
+      toast.textContent = message;
+      toast.classList.add("show");
+      clearTimeout(showToast.timer);
+      showToast.timer = setTimeout(() => toast.classList.remove("show"), 2600);
+    }
+
+    function shuffleArray(array) {
+      for (let i = array.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [array[i], array[j]] = [array[j], array[i]];
+      }
+      return array;
+    }
+
+    function escapeHTML(value) {
+      return String(value)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+    }
+
+    function escapeAttr(value) {
+      return escapeHTML(value);
+    }
+
+    // ============================================================
+    // 9. START APP
+    // ============================================================
+    setupEvents();
+    renderAll();
+  </script>
+</body>
+</html>
